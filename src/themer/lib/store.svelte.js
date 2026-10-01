@@ -1,10 +1,11 @@
 // App state: the theme (the one model) plus editor state: history and preview options.
 // The theme file is the save format, so Open reads the same CSS that Export writes.
 
+import { strToU8, zipSync } from 'fflate'
 import { untrack } from 'svelte'
 import { palette, themes, version } from 'virtual:protokuda'
 import { History } from './history.svelte.js'
-import { completeTheme, isValidName, parseTheme, sourceCss, themeCss } from './theme.js'
+import { completeTheme, fileBaseName, isValidName, parseTheme, readme, sourceCss, themeCss } from './theme.js'
 
 /** @typedef {import('./theme.js').Theme} Theme */
 
@@ -18,7 +19,7 @@ const BASE = themes.greysmoke?.tokens ?? Object.values(themes)[0].tokens
  * @returns {Theme}
  */
 export function startFrom(from) {
-  return { name: `my${from}`, label: `My ${themes[from].label}`, tokens: { ...themes[from].tokens } }
+  return { name: `my${from}`, label: `My ${themes[from].label}`, version: 1, tokens: { ...themes[from].tokens } }
 }
 
 /** @returns {Theme | null} */
@@ -90,8 +91,13 @@ class Store {
     this.replace(completeTheme(theme, BASE))
   }
 
-  exportCss() {
-    download(`${this.theme.name}.css`, themeCss(this.theme), 'text/css')
+  /** One zip: the theme file and a README on how to use it. The CSS keeps a stable name for linking. */
+  exportZip() {
+    const zip = zipSync({
+      [`${this.theme.name}.css`]: strToU8(themeCss(this.theme, { version })),
+      'README.md': strToU8(readme(this.theme, { version })),
+    })
+    download(`${fileBaseName(this.theme)}.zip`, zip, 'application/zip')
   }
 
   /** The protokuda `src/themes/` form, for adding the theme to the library. */

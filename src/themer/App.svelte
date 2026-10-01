@@ -3,7 +3,7 @@
   import Preview from './components/Preview.svelte'
   import ThemePanel from './components/ThemePanel.svelte'
   import TokenRow from './components/TokenRow.svelte'
-  import { GROUPS } from './lib/theme.js'
+  import { GROUPS, fileBaseName } from './lib/theme.js'
   import { store, version } from './lib/store.svelte.js'
 
   let fileInput
@@ -41,9 +41,9 @@
     }
   }
 
-  function exportCss() {
-    store.exportCss()
-    message = `Exported ${store.theme.name}.css.`
+  function exportZip() {
+    store.exportZip()
+    message = `Exported ${fileBaseName(store.theme)}.zip.`
   }
 
   async function copySource() {
@@ -62,7 +62,6 @@
   <h1><span class="mark">Protokuda</span> Themer <span class="version">pk {version}</span></h1>
   <nav aria-label="Theme file">
     <button type="button" data-code="01-0001" title="Open a theme .css file" onclick={() => fileInput.click()}>Open</button>
-    <button type="button" data-code="01-0002" title="Download the theme as a .css file" onclick={exportCss}>Export</button>
     <input bind:this={fileInput} type="file" accept=".css,text/css" hidden onchange={open} />
   </nav>
   <nav aria-label="Edit">
@@ -71,8 +70,10 @@
     <button type="button" data-code="02-0002" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
       title="Redo (Shift+Ctrl/Cmd+Z)" disabled={!store.history.canRedo} onclick={() => store.redo()}>Redo</button>
   </nav>
-  <nav aria-label="Library">
-    <button type="button" class="alt" data-code="03-0001"
+  <nav aria-label="Export">
+    <button type="button" class="alt" data-code="03-0001" title="Download the theme .css and a README as a zip"
+      onclick={exportZip}>Export</button>
+    <button type="button" class="alt" data-code="03-0002"
       title="Copy the theme in protokuda's src/themes form" onclick={copySource}>Copy source</button>
   </nav>
   <p class="message" role="status">{message}</p>

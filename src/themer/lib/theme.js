@@ -8,6 +8,7 @@
  * @typedef {object} Theme
  * @property {string} name   class/file name: `pk-theme-<name>`, `<name>.css`
  * @property {string} label  human name, written as the file's leading comment
+ * @property {number} version  the theme's own version, bumped by the user; in the header comment
  * @property {Record<string, string>} tokens
  */
 
@@ -144,24 +145,34 @@ export const nameFor = (/** @type {string} */ label) =>
  * @returns {Theme}
  */
 export function parseTheme(css, fallbackName = 'custom') {
+  const header = /^\s*\/\*([\s\S]*?)\*\//.exec(css)?.[1] ?? ''
   const all = declarations(css)
   const tokens = /** @type {Record<string, string>} */ ({})
   for (const t of TOKENS) if (all[t.name]) tokens[t.name] = all[t.name]
   if (Object.keys(tokens).length === 0) throw new Error('no Protokuda theme tokens found')
   const cls = /\.pk-theme-([a-z][a-z0-9-]*)/.exec(css)?.[1]
   const name = cls ?? (isValidName(fallbackName) ? fallbackName : nameFor(fallbackName))
-  const comment = /^\s*\/\*+\s*([^\n*][^\n]*?)\s*\n/.exec(css)?.[1]
-  return { name, label: comment ?? titleCase(name), tokens }
+  const label = /^\*?[ \t]*([^\s*][^\n]*?)[ \t]*$/m.exec(header)?.[1]
+  const version = Number(/^\s*Version\s+(\d+)\s*$/im.exec(header)?.[1] ?? 1)
+  return { name, label: label ?? titleCase(name), version: version >= 1 ? version : 1, tokens }
 }
 
 /**
- * The theme file: linked on its own it themes the page (`:root`); with protokuda.css
- * also loaded, `.pk-theme-<name>` themes a single frame or section.
+ * Download filename without extension: the theme name plus version, e.g. `lilac-v3`.
  * @param {Theme} theme
  */
-export function themeCss(theme) {
+export const fileBaseName = (theme) => `${theme.name}-v${theme.version}`
+
+/**
+ * The theme file: linked on its own it themes the page (`:root`); with protokuda.css
+ * also loaded, `.pk-theme-<name>` themes a single frame or section. CSS has nowhere else
+ * for metadata, so the label and version go in the header comment, where Open finds them.
+ * @param {Theme} theme
+ * @param {{ version: string }} pk  the Protokuda version it was made against
+ */
+export function themeCss(theme, pk) {
   return [
-    `/**\n${theme.label}\n*/`,
+    `/**\n${theme.label}\nVersion ${theme.version}\nMade with Protokuda Themer for Protokuda ${pk.version}\n*/`,
     '@layer protokuda.base, protokuda.theme, protokuda.state;',
     '',
     '@layer protokuda.theme {',
@@ -206,7 +217,8 @@ export function completeTheme(theme, base) {
     const v = theme.tokens[t.name] ?? (t.optional ? undefined : base[t.name])
     if (v) tokens[t.name] = v
   }
-  return { name: theme.name, label: theme.label, tokens }
+  const version = Number.isInteger(theme.version) && theme.version >= 1 ? theme.version : 1
+  return { name: theme.name, label: theme.label, version, tokens }
 }
 
 /**
@@ -305,4 +317,48 @@ export function wouldCycle(/** @type {Theme} */ theme, /** @type {string} */ tok
     cur = v && (TOKEN_NAMES.has(v) ? v : varName(v))
   }
   return false
+}
+
+/** jsDelivr URL for a Protokuda file at exactly `version`. */
+export const cdnUrl = (/** @type {string} */ version, /** @type {string} */ file) =>
+  `https://cdn.jsdelivr.net/npm/protokuda@${version}/dist/${file}`
+
+/**
+ * The README that ships beside the theme in the Export zip.
+ * @param {Theme} theme
+ * @param {{ version: string }} pk
+ */
+export function readme(theme, pk) {
+  const file = `${theme.name}.css`
+  return `# ${theme.label}
+
+A [Protokuda](https://github.com/dennisdunn/protokuda) theme, version ${theme.version},
+made for Protokuda ${pk.version}.
+
+## How to use the theme
+
+Put \`${file}\` next to your page and link it **after** Protokuda. The font and the library
+come from the web:
+
+\`\`\`html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Antonio:wght@100..700&display=swap" />
+<link rel="stylesheet" href="${cdnUrl(pk.version, 'protokuda.min.css')}" />
+<link rel="stylesheet" href="${file}" />
+\`\`\`
+
+That themes the whole page. To theme just part of it instead (one frame or section), add the
+class to that element:
+
+\`\`\`html
+<div class="pk-frame pk-std pk-theme-${theme.name}">...</div>
+\`\`\`
+
+The class works on its own, or inside a page that uses a different theme.
+
+## Changing it
+
+Open \`${file}\` in [Protokuda Themer](https://dennisdunn.github.io/pk-themer/) to keep editing.
+The theme is plain CSS custom properties in Protokuda's \`protokuda.theme\` cascade layer, so your
+own CSS outside a layer overrides any of them, e.g. \`:root { --pk-primary: #f90; }\`.
+`
 }

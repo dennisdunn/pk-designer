@@ -9,11 +9,15 @@ square buttons with code numbers, thin bars, no curves) and its stack and conven
 
 - **Separate repo**, consuming the *published* `protokuda` npm package (3.x). Library changes happen in
   the protokuda repo.
-- **The theme is one model**: `{ name, label, tokens }` where token values are CSS values exactly as a
+- **The theme is one model**: `{ name, label, version, tokens }` where token values are CSS values exactly as a
   theme file writes them: `var(--pk-<palette>)`, `var(--pk-<token>)` or `#hex`. Preview, export,
   autosave and undo all derive from it.
 - **The theme `.css` is the save format.** Open parses theme CSS (built `:root`, source `.pk-theme-x`, or
   our export); Export writes `:root, .pk-theme-<name>` in `@layer protokuda.theme`. No separate JSON.
+- **Metadata lives in the header comment** (label, `Version N`, the Protokuda version), since CSS has
+  nowhere else for it; a custom property would leak into the cascade. `parseTheme` reads label and version.
+- **Export is a zip** (`fflate`), `<name>-v<version>.zip`, as in pk-designer: `<name>.css` (stable name, for
+  linking) and a `README.md` on using it, with CDN links pinned to the installed Protokuda version.
 - **Nothing hard-coded from the package**: `virtual:protokuda` (vite.config.js) gives the version, the
   palette (parsed from `dist/protokuda.css`) and the built-in themes (from `dist/themes/`). The token
   schema in `src/lib/theme.js` is the exception; a test checks it against the default theme's tokens.
@@ -23,10 +27,11 @@ square buttons with code numbers, thin bars, no curves) and its stack and conven
 
 ## Code map
 
-- `src/lib/theme.js`: token schema (`GROUPS`), parse/write theme CSS, resolve values to colors, contrast.
+- `src/lib/theme.js`: token schema (`GROUPS`), parse/write theme CSS, the export README, resolve values
+  to colors, contrast.
 - `src/lib/store.svelte.js`: the theme `$state`, preview options, autosave, open/export.
 - `src/lib/history.svelte.js`: undo/redo over JSON snapshots (copied from pk-designer).
-- `src/components/`: `Preview`, `ThemePanel` (name, label, start from, preview options),
+- `src/components/`: `Preview`, `ThemePanel` (label, name, version, start from, preview options),
   `TokenRow`, `ContrastPanel`.
 - `npm run dev` / `npm test` / `npm run check` / `npm run build`. CI and Pages deploy as in pk-designer.
 

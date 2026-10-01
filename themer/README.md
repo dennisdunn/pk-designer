@@ -22,8 +22,12 @@ exports a theme file that drops in beside the library.
 
 ### Files
 
-- **Export** downloads `<name>.css`. Link it after `protokuda.css` to theme the page; it also defines
-  `.pk-theme-<name>` for theming a single frame or section.
+- **Export** downloads `<name>-v<version>.zip` containing
+  - `<name>.css`: link it after `protokuda.css` to theme the page; it also defines `.pk-theme-<name>`
+    for theming a single frame or section. Its header comment holds the label, the theme version and the
+    Protokuda version it was made for; Open reads the label and version back.
+  - `README.md`: how to use the theme, with Protokuda links pinned to that version.
+- **Version** is a plain counter: press **Next version** in the Theme panel when you want a new one.
 - **Copy source** copies the theme in the library's `src/themes/<name>.css` form, for adding it to Protokuda.
 
 ### Development

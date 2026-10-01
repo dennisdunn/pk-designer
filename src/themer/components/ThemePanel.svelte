@@ -1,6 +1,6 @@
 <script>
   // The theme's name and label, a starting point, and the preview options.
-  import { contrastChecks, isValidName, nameFor } from '../lib/theme.js'
+  import { contrastChecks, fileBaseName, isValidName, nameFor } from '../lib/theme.js'
   import { palette, startFrom, store, themes } from '../lib/store.svelte.js'
 
   const theme = $derived(store.theme)
@@ -13,6 +13,12 @@
     const value = e.currentTarget.value.trim()
     nameError = !isValidName(value)
     if (!nameError) theme.name = value
+  }
+
+  function setVersion(e) {
+    const n = Number(e.currentTarget.value)
+    if (Number.isInteger(n) && n >= 1) theme.version = n
+    else e.currentTarget.value = String(theme.version)
   }
 
   // Typing a label suggests a name while the name still matches the old label.
@@ -49,6 +55,23 @@
         File <code>{theme.name}.css</code>, class <code>pk-theme-{theme.name}</code>
       {/if}
     </p>
+  </div>
+
+  <div class="field">
+    <label for="ins-version">Version</label>
+    <div class="version">
+      <input
+        id="ins-version"
+        type="number"
+        min="1"
+        step="1"
+        value={theme.version}
+        aria-describedby="ins-version-help"
+        onchange={setVersion}
+      />
+      <button type="button" class="small" onclick={() => theme.version++}>Next version</button>
+    </div>
+    <p id="ins-version-help" class="help">Export filename: <code class="filename">{fileBaseName(theme)}.zip</code></p>
   </div>
 
   <div class="field">

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
-  TOKENS, completeTheme, contrast, contrastChecks, declarations, labelFor, nameFor, paletteFrom,
-  parseTheme, resolve, sourceCss, themeCss, wouldCycle,
+  TOKENS, completeTheme, contrast, contrastChecks, declarations, fileBaseName, labelFor, nameFor,
+  paletteFrom, parseTheme, readme, resolve, sourceCss, themeCss, wouldCycle,
 } from './theme.js'
 
 const pkg = (f) => readFileSync(new URL(`../../node_modules/protokuda/dist/${f}`, import.meta.url), 'utf8')
@@ -31,10 +31,22 @@ describe('parse and write', () => {
     expect(t.tokens['--pk-primary']).toBe('var(--pk-lilac)')
   })
 
-  it('round-trips through the exported file and the source form', () => {
+  it('round-trips through the exported file, version included', () => {
+    const t = { ...parseTheme(pkg('themes/atomic.css'), 'atomic'), label: 'Atomic', version: 7 }
+    const css = themeCss(t, { version: '3.0.1' })
+    expect(css).toMatch(/^\/\*\*\nAtomic\nVersion 7\nMade with Protokuda Themer for Protokuda 3\.0\.1\n\*\//)
+    expect(parseTheme(css, 'x')).toEqual(t)
+  })
+
+  it('round-trips through the source form, which has no version', () => {
     const t = { ...parseTheme(pkg('themes/atomic.css'), 'atomic'), label: 'Atomic' }
-    expect(parseTheme(themeCss(t), 'x')).toEqual(t)
-    expect(parseTheme(sourceCss(t), 'x')).toEqual(t)
+    expect(parseTheme(sourceCss(t), 'x')).toEqual({ ...t, version: 1 })
+  })
+
+  it('reads a one-line header comment', () => {
+    const t = parseTheme('/* Ember */ .pk-theme-ember { --pk-primary: #f60; }')
+    expect(t.label).toBe('Ember')
+    expect(t.version).toBe(1)
   })
 
   it('takes the name from the class, else the filename', () => {
@@ -48,10 +60,24 @@ describe('parse and write', () => {
 
   it('fills in missing tokens from a base, leaving optional ones unset', () => {
     const base = parseTheme(pkg('themes/greysmoke.css')).tokens
-    const t = completeTheme({ name: 'x', label: 'X', tokens: { '--pk-primary': '#123456' } }, base)
+    const t = completeTheme({ name: 'x', label: 'X', version: 2, tokens: { '--pk-primary': '#123456' } }, base)
+    expect(t.version).toBe(2)
     expect(t.tokens['--pk-primary']).toBe('#123456')
     expect(t.tokens['--pk-text']).toBe(base['--pk-text'])
     expect('--pk-on-backdrop' in t.tokens).toBe(false)
+  })
+})
+
+describe('export', () => {
+  const t = { name: 'ember', label: 'Ember', version: 3, tokens: {} }
+  it('names the zip after the theme and version', () => {
+    expect(fileBaseName(t)).toBe('ember-v3')
+  })
+  it('writes a README with pinned links and the class', () => {
+    const md = readme(t, { version: '3.0.1' })
+    expect(md).toContain('https://cdn.jsdelivr.net/npm/protokuda@3.0.1/dist/protokuda.min.css')
+    expect(md).toContain('href="ember.css"')
+    expect(md).toContain('pk-theme-ember')
   })
 })
 
@@ -67,7 +93,7 @@ describe('names', () => {
 
 describe('resolve', () => {
   const theme = {
-    name: 't', label: 'T',
+    name: 't', label: 'T', version: 1,
     tokens: { '--pk-primary': 'var(--pk-lilac)', '--pk-button-bg': 'var(--pk-primary)', '--pk-text': '#ABC' },
   }
   it('follows palette and token references', () => {
