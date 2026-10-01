@@ -2,7 +2,7 @@
   import Canvas from './components/Canvas.svelte'
   import FramePanel from './components/FramePanel.svelte'
   import PagePanel from './components/PagePanel.svelte'
-  import { starterDesign } from './lib/model.js'
+  import { emptyDesign } from './lib/model.js'
   import { store, version } from './lib/store.svelte.js'
 
   let fileInput
@@ -28,8 +28,10 @@
     }
   }
 
+  // No confirm(): New is undoable, and some browsers block dialogs (which would make New do nothing).
   function newDesign() {
-    if (confirm('Start a new design? The current one will be replaced.')) store.replace(starterDesign())
+    store.replace(emptyDesign())
+    message = 'New design. Undo brings the previous one back.'
   }
 
   async function open(e) {

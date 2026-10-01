@@ -27,6 +27,7 @@ each frame's empty `pk-content` element after export.
 
 ### Files
 
+- **New** starts an empty design: one column, one row, no frames.
 - **Save / Open:** the design as `<title>-v<version>.json`. The designer also autosaves to the browser's
   local storage, so a reload picks up where you left off.
 - **Export:** `<title>-v<version>.zip` containing

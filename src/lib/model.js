@@ -326,7 +326,19 @@ export function newFrame(design, rect) {
   }
 }
 
+/** @returns {Page} */
+const defaultPage = () => ({ title: 'Protokuda screen', version: 1, theme: DEFAULT_THEME, alert: false, tokens: {} })
+
 /**
+ * What New gives you: one `1fr` column, one `1fr` row, no frames.
+ * @returns {Design}
+ */
+export function emptyDesign() {
+  return { version: MODEL_VERSION, grid: { columns: ['1fr'], rows: ['1fr'] }, page: defaultPage(), frames: [] }
+}
+
+/**
+ * The example a first visit opens with.
  * @returns {Design}
  */
 export function starterDesign() {
@@ -334,13 +346,7 @@ export function starterDesign() {
   return {
     version: MODEL_VERSION,
     grid: { columns: ['14rem', '1fr'], rows: ['7rem', '1fr', '6rem'] },
-    page: {
-      title: 'Protokuda screen',
-      version: 1,
-      theme: DEFAULT_THEME,
-      alert: false,
-      tokens: { '--pk-inner-radius': '0rem' },
-    },
+    page: { ...defaultPage(), tokens: { '--pk-inner-radius': '0rem' } },
     frames: [
       frame('header', { x: 0, y: 0, w: 2, h: 1 }, { title: 'Main bridge', label: ['Deck 1'] }),
       frame('nav', { x: 0, y: 1, w: 1, h: 2 }, {

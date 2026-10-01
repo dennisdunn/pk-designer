@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   areaNameError, deleteFrame, fileBaseName, insertTrack, placeFrame, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
-  splitTracks, starterDesign, MODEL_VERSION, newFrame,
+  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame,
 } from './model.js'
 
 /** @type {(id: string, rect: import('./model.js').Rect) => import('./model.js').Frame} */
@@ -128,5 +128,17 @@ describe('design version', () => {
     expect(normalizeDesign(d).page.version).toBe(1)
     d.page.version = 7
     expect(normalizeDesign(d).page.version).toBe(7)
+  })
+})
+
+describe('emptyDesign', () => {
+  it('is one 1fr cell with no frames, at version 1', () => {
+    const d = emptyDesign()
+    expect(d.grid).toEqual({ columns: ['1fr'], rows: ['1fr'] })
+    expect(d.frames).toEqual([])
+    expect(d.page).toMatchObject({ version: 1, theme: 'greysmoke', alert: false, tokens: {} })
+  })
+  it('survives a save and load', () => {
+    expect(normalizeDesign(JSON.parse(JSON.stringify(emptyDesign())))).toEqual(emptyDesign())
   })
 })
