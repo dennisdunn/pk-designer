@@ -9,6 +9,10 @@
 
   // svelte-ignore state_referenced_locally
   let areaDraft = $state(frame.area)
+  // Follow the model when it changes underneath us (undo/redo).
+  $effect.pre(() => {
+    if (frame) areaDraft = frame.area
+  })
   const areaError = $derived(areaNameError(areaDraft, store.design, frame.id))
   let rectError = $state('')
 

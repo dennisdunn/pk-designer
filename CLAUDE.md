@@ -46,7 +46,7 @@ buttons with code numbers, thin bars, optional curved elbows). Keep that spirit 
 - JSON save/load and localStorage autosave.
 
 **Later:** responsive layouts (a grid per breakpoint), nested frames, a theme editor (palette colors,
-contrast checks, theme file export), undo/redo and keyboard shortcuts.
+contrast checks, theme file export), more keyboard shortcuts.
 
 Open questions: whether the export should offer `@3` as well as the exact version (it pins the exact
 version for now); whether to inline the CSS as an export option.
@@ -59,6 +59,7 @@ version for now); whether to inline the CSS as an export option.
 - `src/lib/model.js`: the JSON model, geometry (fits/overlap, insert/remove tracks), loading/validation.
 - `src/lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
   (scoped to `.pv`, frames matched by `data-area`, screen `inert`), so preview and export can't drift.
+- `src/lib/history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step.
 - `src/lib/tracks.js`: dragging the line between two tracks, keeping each track's unit.
 - `src/components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
   positioned from the screen's computed `grid-template-columns/rows`.

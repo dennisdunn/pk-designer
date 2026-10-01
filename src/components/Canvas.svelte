@@ -124,6 +124,7 @@
     store.select(frame.id)
     const cell = cellAt(e)
     drag = { kind: 'move', id: frame.id, offX: cell.x - frame.rect.x, offY: cell.y - frame.rect.y }
+    store.history.begin()
     guides.setPointerCapture(e.pointerId)
   }
 
@@ -132,6 +133,7 @@
     e.stopPropagation()
     e.preventDefault()
     drag = { kind: 'resize', id: frame.id, edge, orig: { ...frame.rect } }
+    store.history.begin()
     guides.setPointerCapture(e.pointerId)
   }
 
@@ -149,6 +151,7 @@
       pxA: spans[index].end - spans[index].start,
       pxB: spans[index + 1].end - spans[index + 1].start,
     }
+    store.history.begin()
     guides.setPointerCapture(e.pointerId)
   }
 
@@ -208,6 +211,7 @@
     }
     drag = null
     draft = null
+    store.history.end()
   }
 
   function applyTrackDelta(axis, index, tracks, pxA, pxB, delta) {

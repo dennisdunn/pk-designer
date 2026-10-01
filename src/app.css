@@ -116,9 +116,13 @@ button[data-code]::after {
   text-align: right;
   opacity: 0.75;
 }
-.toolbar button:hover,
+.toolbar button:hover:not(:disabled),
 .inspector button:not(.icon):hover {
   filter: brightness(0.85);
+}
+.toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* ---------- workspace ---------- */

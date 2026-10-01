@@ -1,7 +1,9 @@
 // App state: the design (the one JSON model) plus editor-only state like selection.
 
 import { strToU8, zipSync } from 'fflate'
+import { untrack } from 'svelte'
 import { themes, version } from 'virtual:protokuda'
+import { History } from './history.svelte.js'
 import { indexHtml, layoutCss } from './markup.js'
 import {
   fileBaseName, firstEmptyCell, insertTrack, newFrame, normalizeDesign, rectFits, removeTrack, starterDesign,
@@ -33,12 +35,33 @@ class Store {
 
   selected = $derived(this.design.frames.find((f) => f.id === this.selectedId) ?? null)
 
-  autosave() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.design))
-    } catch {
-      // Private window or storage full: autosave is a convenience, carry on without it.
-    }
+  history = new History()
+
+  /** Call from an effect: reads the whole design, so it runs on every change. */
+  changed() {
+    const json = JSON.stringify(this.design)
+    untrack(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, json)
+      } catch {
+        // Private window or storage full: autosave is a convenience, carry on without it.
+      }
+      this.history.note(json)
+    })
+  }
+
+  undo() {
+    this.#restore(this.history.undo())
+  }
+
+  redo() {
+    this.#restore(this.history.redo())
+  }
+
+  #restore(json) {
+    if (json === null) return
+    this.design = JSON.parse(json)
+    if (this.selectedId && !this.selected) this.selectedId = null
   }
 
   select(id) {
