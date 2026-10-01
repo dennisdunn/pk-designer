@@ -60,11 +60,10 @@
     <div class="pk-frame pk-bracket pk-sidebar scan">
       <div class="pk-title">Sensors</div>
       <div class="pk-items">
-        <button class="pk-button" data-code="12-0001">Long range</button>
-        <button class="pk-button" data-code="12-0002">Short range</button>
+        <button class="pk-button" data-code="12-0001">Scan</button>
       </div>
       <div class="pk-content"><p>Bracket frame with a sidebar.</p></div>
-      <div class="pk-label"><span>Scan in progress</span></div>
+      <div class="pk-label"><span>Scanning</span></div>
     </div>
 
     <div class="pk-frame pk-alert alert">
