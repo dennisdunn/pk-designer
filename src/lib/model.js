@@ -1,6 +1,8 @@
 // The design model: plain JSON, no DOM. Everything else (preview, export,
 // save/load, autosave) is derived from one of these objects.
 
+// The file format's version. Not to be confused with `page.version`, the design's own
+// version number, which the user bumps and which goes into download filenames.
 export const MODEL_VERSION = 1
 
 export const FRAME_TYPES = [
@@ -165,6 +167,12 @@ export function setTracks(design, axis, sizes) {
   })
 }
 
+/** Download filename without extension: slugged page title plus version, e.g. `bridge-v3`. */
+export function fileBaseName(design) {
+  const title = design.page.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'design'
+  return `${title}-v${design.page.version}`
+}
+
 // ---------- construction and loading ----------
 
 export function newFrame(design, rect) {
@@ -187,7 +195,13 @@ export function starterDesign() {
   return {
     version: MODEL_VERSION,
     grid: { columns: ['14rem', '1fr'], rows: ['7rem', '1fr', '6rem'] },
-    page: { title: 'Protokuda screen', theme: DEFAULT_THEME, alert: false, tokens: { '--pk-inner-radius': '0rem' } },
+    page: {
+      title: 'Protokuda screen',
+      version: 1,
+      theme: DEFAULT_THEME,
+      alert: false,
+      tokens: { '--pk-inner-radius': '0rem' },
+    },
     frames: [
       frame('header', { x: 0, y: 0, w: 2, h: 1 }, { title: 'Main bridge', label: ['Deck 1'] }),
       frame('nav', { x: 0, y: 1, w: 1, h: 2 }, {
@@ -233,6 +247,7 @@ export function normalizeDesign(raw, knownThemes = null) {
     grid: { columns: tracks(raw.grid.columns), rows: tracks(raw.grid.rows) },
     page: {
       title: str(page.title, 'Protokuda screen'),
+      version: Number.isInteger(page.version) && page.version >= 1 ? page.version : 1,
       theme: okTheme(page.theme) ? page.theme : DEFAULT_THEME,
       alert: page.alert === true,
       tokens,

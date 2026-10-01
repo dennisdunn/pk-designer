@@ -1,6 +1,6 @@
 <script>
   // Page-level settings: theme, tokens, and the grid tracks as text.
-  import { PAGE_TOKENS, isValidLength, isValidTrack, setTracks, splitTracks } from '../lib/model.js'
+  import { PAGE_TOKENS, fileBaseName, isValidLength, isValidTrack, setTracks, splitTracks } from '../lib/model.js'
   import { store, themes } from '../lib/store.svelte.js'
 
   const page = $derived(store.design.page)
@@ -8,6 +8,12 @@
   const radius = $derived(parseFloat(page.tokens['--pk-inner-radius'] ?? '0') || 0)
 
   let gridError = $state({ columns: false, rows: false })
+
+  function setVersion(e) {
+    const n = Number(e.currentTarget.value)
+    if (Number.isInteger(n) && n >= 1) page.version = n
+    else e.currentTarget.value = String(page.version)
+  }
 
   function setToken(name, e) {
     const value = e.currentTarget.value.trim()
@@ -34,6 +40,23 @@
   <div class="field">
     <label for="ins-page-title">Page title</label>
     <input id="ins-page-title" bind:value={page.title} autocomplete="off" />
+  </div>
+
+  <div class="field">
+    <label for="ins-page-version">Version</label>
+    <div class="version">
+      <input
+        id="ins-page-version"
+        type="number"
+        min="1"
+        step="1"
+        value={page.version}
+        aria-describedby="ins-version-help"
+        onchange={setVersion}
+      />
+      <button type="button" class="small" onclick={() => page.version++}>Next version</button>
+    </div>
+    <p id="ins-version-help" class="help">Save and Export filenames: <code class="filename">{fileBaseName(store.design)}</code></p>
   </div>
 
   <div class="field">

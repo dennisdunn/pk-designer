@@ -31,6 +31,7 @@ describe('export', () => {
     expect(html).toContain('https://cdn.jsdelivr.net/npm/protokuda@9.8.7/dist/protokuda.min.css')
     expect(html).toContain('family=Antonio')
     expect(html).toContain('href="layout.css"')
+    expect(html).toContain('<meta name="version" content="1" />')
     expect(html).toContain('<html lang="en" class="pk-theme-greysmoke">')
     expect(html).not.toContain('style=')
   })

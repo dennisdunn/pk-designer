@@ -4,7 +4,7 @@ import { strToU8, zipSync } from 'fflate'
 import { themes, version } from 'virtual:protokuda'
 import { indexHtml, layoutCss } from './markup.js'
 import {
-  firstEmptyCell, insertTrack, newFrame, normalizeDesign, rectFits, removeTrack, starterDesign,
+  fileBaseName, firstEmptyCell, insertTrack, newFrame, normalizeDesign, rectFits, removeTrack, starterDesign,
 } from './model.js'
 
 const STORAGE_KEY = 'pk-designer:design'
@@ -26,8 +26,6 @@ function download(filename, data, type) {
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 0)
 }
-
-const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'design'
 
 class Store {
   design = $state(loadAutosave() ?? starterDesign())
@@ -87,7 +85,7 @@ class Store {
   }
 
   saveJson() {
-    download(`${slug(this.design.page.title)}.json`, JSON.stringify(this.design, null, 2) + '\n', 'application/json')
+    download(`${fileBaseName(this.design)}.json`, JSON.stringify(this.design, null, 2) + '\n', 'application/json')
   }
 
   async openJson(file) {
@@ -100,7 +98,7 @@ class Store {
       'index.html': strToU8(indexHtml(this.design, { version })),
       'layout.css': strToU8(layoutCss(this.design)),
     })
-    download(`${slug(this.design.page.title)}.zip`, zip, 'application/zip')
+    download(`${fileBaseName(this.design)}.zip`, zip, 'application/zip')
   }
 }
 

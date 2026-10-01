@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  areaNameError, insertTrack, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
+  areaNameError, fileBaseName, insertTrack, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
   splitTracks, starterDesign,
 } from './model.js'
 
@@ -90,5 +90,25 @@ describe('normalizeDesign', () => {
   })
   it('rejects things that are not designs', () => {
     expect(() => normalizeDesign({ hello: 1 })).toThrow()
+  })
+})
+
+describe('design version', () => {
+  it('names files from the title and version', () => {
+    const d = starterDesign()
+    d.page.title = 'Main Bridge: Deck 1'
+    d.page.version = 3
+    expect(fileBaseName(d)).toBe('main-bridge-deck-1-v3')
+    d.page.title = '***'
+    expect(fileBaseName(d)).toBe('design-v3')
+  })
+  it('defaults to 1 for older files and bad values', () => {
+    const d = starterDesign()
+    delete d.page.version
+    expect(normalizeDesign(d).page.version).toBe(1)
+    d.page.version = 2.5
+    expect(normalizeDesign(d).page.version).toBe(1)
+    d.page.version = 7
+    expect(normalizeDesign(d).page.version).toBe(7)
   })
 })

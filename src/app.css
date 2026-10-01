@@ -275,6 +275,17 @@ p.hint.panel {
   background: var(--ui-danger);
 }
 
+.inspector code.filename {
+  white-space: nowrap;
+}
+
+.inspector .version {
+  display: grid;
+  grid-template-columns: 5rem auto;
+  justify-content: start;
+  gap: 0.4rem;
+}
+
 .inspector .rect {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

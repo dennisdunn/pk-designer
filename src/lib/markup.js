@@ -107,6 +107,7 @@ export function indexHtml(design, { version }) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="version" content="${design.page.version}" />
     <title>${esc(design.page.title || 'Protokuda screen')}</title>
     <link rel="stylesheet" href="${FONT_URL}" />
     <link rel="stylesheet" href="${cdnUrl(version)}" />
