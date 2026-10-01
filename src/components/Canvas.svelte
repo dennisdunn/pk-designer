@@ -4,18 +4,18 @@
   // The preview is the exported markup and layout CSS (scoped to `.pv`), rendered with the
   // real protokuda.css. Over it sits a "guides" layer positioned from the measured grid:
   // empty-cell outlines, frame hit boxes with resize handles, and track separators.
+  import { EDGES, drawRect, moveRect, nudgeRect, resizeRect, trackAt } from '../lib/gestures.js'
   import { layoutCss, screenMarkup } from '../lib/markup.js'
-  import { frameAtCell, rectFits, rectFromCells, splitTracks } from '../lib/model.js'
+  import { deleteFrame, frameAtCell, placeFrame, splitTracks } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
   import { resizeTrackPair } from '../lib/tracks.js'
   import Ruler from './Ruler.svelte'
 
-  const EDGES = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
   const KEY_STEP_PX = 8
 
   let canvas = $state()
   let guides = $state()
-  /** @typedef {{ start: number, end: number }} Span */
+  /** @typedef {import('../lib/gestures.js').Span} Span */
   /**
    * Measured grid, in px relative to the canvas.
    * @type {{ cols: Span[], rows: Span[], gapX: number, gapY: number, fontSize: number, contentW: number, contentH: number }}
@@ -23,7 +23,7 @@
   let m = $state({ cols: [], rows: [], gapX: 0, gapY: 0, fontSize: 16, contentW: 0, contentH: 0 })
   /** Current pointer gesture, if any. */
   let drag = null
-  /** Rectangle being drawn. */
+  /** @type {import('../lib/model.js').Rect | null} Rectangle being drawn. */
   let draft = $state(null)
 
   const design = $derived(store.design)
@@ -97,20 +97,10 @@
     return `left:${c0.start}px;top:${r0.start}px;width:${c1.end - c0.start}px;height:${r1.end - r0.start}px`
   }
 
-  function indexAt(spans, p) {
-    for (let i = 0; i < spans.length - 1; i++) if (p < (spans[i].end + spans[i + 1].start) / 2) return i
-    return spans.length - 1
-  }
-
   function cellAt(e) {
     const r = canvas.getBoundingClientRect()
-    return { x: indexAt(m.cols, e.clientX - r.left), y: indexAt(m.rows, e.clientY - r.top) }
+    return { x: trackAt(m.cols, e.clientX - r.left), y: trackAt(m.rows, e.clientY - r.top) }
   }
-
-  /** First candidate rectangle that fits, so drags slide along obstacles instead of sticking. */
-  const firstFit = (candidates, ignoreId) => candidates.find((r) => rectFits(design, r, ignoreId)) ?? null
-
-  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n))
 
   // ---------- pointer gestures ----------
 
@@ -127,7 +117,7 @@
     e.stopPropagation()
     store.select(frame.id)
     const cell = cellAt(e)
-    drag = { kind: 'move', id: frame.id, offX: cell.x - frame.rect.x, offY: cell.y - frame.rect.y }
+    drag = { kind: 'move', id: frame.id, grab: { x: cell.x - frame.rect.x, y: cell.y - frame.rect.y } }
     store.history.begin()
     guides.setPointerCapture(e.pointerId)
   }
@@ -162,46 +152,25 @@
   function onMove(e) {
     if (!drag) return
     if (drag.kind === 'draw') {
+      // A press only becomes a draw once the pointer has moved a little.
       if (!drag.started) {
         if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return
         drag.started = true
         draft = { ...drag.start, w: 1, h: 1 }
-        drag.last = drag.start
+        drag.corner = drag.start
       }
-      const cur = cellAt(e)
-      const last = drag.last
-      const fit = firstFit([
-        rectFromCells(drag.start, cur),
-        rectFromCells(drag.start, { x: cur.x, y: last.y }),
-        rectFromCells(drag.start, { x: last.x, y: cur.y }),
-      ])
-      if (fit) {
-        draft = fit
-        drag.last = {
-          x: fit.x === drag.start.x ? fit.x + fit.w - 1 : fit.x,
-          y: fit.y === drag.start.y ? fit.y + fit.h - 1 : fit.y,
-        }
+      const next = drawRect(design, drag.start, cellAt(e), drag.corner)
+      if (next) {
+        draft = next.rect
+        drag.corner = next.corner
       }
     } else if (drag.kind === 'move') {
       const frame = design.frames.find((f) => f.id === drag.id)
-      if (!frame) return
-      const { w, h } = frame.rect
-      const cur = cellAt(e)
-      const x = clamp(cur.x - drag.offX, 0, design.grid.columns.length - w)
-      const y = clamp(cur.y - drag.offY, 0, design.grid.rows.length - h)
-      const fit = firstFit([{ x, y, w, h }, { x, y: frame.rect.y, w, h }, { x: frame.rect.x, y, w, h }], frame.id)
-      if (fit) store.setRect(frame.id, fit)
+      const rect = frame && moveRect(design, frame, cellAt(e), drag.grab)
+      if (rect) placeFrame(design, drag.id, rect)
     } else if (drag.kind === 'resize') {
-      const o = drag.orig
-      const cur = cellAt(e)
-      let [x0, x1, y0, y1] = [o.x, o.x + o.w - 1, o.y, o.y + o.h - 1]
-      if (drag.edge.includes('e')) x1 = Math.max(cur.x, x0)
-      if (drag.edge.includes('w')) x0 = Math.min(cur.x, x1)
-      if (drag.edge.includes('s')) y1 = Math.max(cur.y, y0)
-      if (drag.edge.includes('n')) y0 = Math.min(cur.y, y1)
-      const both = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 }
-      const fit = firstFit([both, { ...both, y: o.y, h: o.h }, { ...both, x: o.x, w: o.w }], drag.id)
-      if (fit) store.setRect(drag.id, fit)
+      const rect = resizeRect(design, drag.id, drag.orig, drag.edge, cellAt(e))
+      if (rect) placeFrame(design, drag.id, rect)
     } else if (drag.kind === 'track') {
       const delta = (drag.axis === 'columns' ? e.clientX : e.clientY) - drag.p0
       applyTrackDelta(drag.axis, drag.index, drag.orig, drag.pxA, drag.pxB, delta)
@@ -234,12 +203,12 @@
     if (dirs[e.key]) {
       e.preventDefault()
       const [dx, dy] = dirs[e.key]
-      const r = frame.rect
       // Arrows move; Shift+arrows move the right/bottom edge.
-      store.setRect(frame.id, e.shiftKey ? { ...r, w: r.w + dx, h: r.h + dy } : { ...r, x: r.x + dx, y: r.y + dy })
+      const rect = nudgeRect(design, frame, dx, dy, e.shiftKey)
+      if (rect) placeFrame(design, frame.id, rect)
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault()
-      store.deleteFrame(frame.id)
+      deleteFrame(design, frame.id)
       canvas.focus()
     } else if (e.key === 'Escape') {
       store.select(null)

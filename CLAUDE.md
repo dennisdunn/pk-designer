@@ -61,7 +61,11 @@ version for now); whether to inline the CSS as an export option.
 - `src/lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
   (scoped to `.pv`, frames matched by `data-area`, screen `inert`), so preview and export can't drift.
 - `src/lib/history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step.
+- `src/lib/gestures.js`: draw/move/resize/nudge as pure functions from cells to a rectangle.
 - `src/lib/tracks.js`: dragging the line between two tracks, keeping each track's unit.
+- Editing rule: frames and tracks change through `model.js` functions (`placeFrame`, `deleteFrame`,
+  `insertTrack`, ...) called on `store.design`; plain fields are edited directly. The store holds only
+  editor state (selection, history, files). A selected id may outlive its frame; `store.selected` is null then.
 - `src/components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
   positioned from the screen's computed `grid-template-columns/rows`.
 

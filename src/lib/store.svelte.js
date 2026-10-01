@@ -1,4 +1,5 @@
-// App state: the design (the one JSON model) plus editor-only state like selection.
+// App state: the design (the one JSON model) plus editor state: selection, history, files.
+// Frames and tracks are edited with the functions in model.js, called on `store.design`.
 
 import { strToU8, zipSync } from 'fflate'
 import { untrack } from 'svelte'
@@ -6,12 +7,11 @@ import { themes, version } from 'virtual:protokuda'
 import { History } from './history.svelte.js'
 import { indexHtml, layoutCss } from './markup.js'
 import {
-  fileBaseName, firstEmptyCell, insertTrack, newFrame, normalizeDesign, rectFits, removeTrack, starterDesign,
+  fileBaseName, firstEmptyCell, newFrame, normalizeDesign, rectFits, starterDesign,
 } from './model.js'
 
 /** @typedef {import('./model.js').Design} Design */
 /** @typedef {import('./model.js').Rect} Rect */
-/** @typedef {import('./model.js').Axis} Axis */
 
 const STORAGE_KEY = 'pk-designer:design'
 
@@ -67,10 +67,13 @@ class Store {
   #restore(json) {
     if (json === null) return
     this.design = JSON.parse(json)
-    if (this.selectedId && !this.selected) this.selectedId = null
   }
 
-  /** @param {string | null} id */
+  /**
+   * The id may outlive its frame (deleted, or undone away); `selected` is then null,
+   * and the selection comes back if the frame does.
+   * @param {string | null} id
+   */
   select(id) {
     this.selectedId = id
   }
@@ -95,42 +98,6 @@ class Store {
     this.design.frames.push(frame)
     this.selectedId = frame.id
     return frame
-  }
-
-  /** @param {string} id */
-  deleteFrame(id) {
-    this.design.frames = this.design.frames.filter((f) => f.id !== id)
-    if (this.selectedId === id) this.selectedId = null
-  }
-
-  /**
-   * Move or resize a frame, only if the result is a valid placement.
-   * @param {string} id
-   * @param {Rect} rect
-   */
-  setRect(id, rect) {
-    const frame = this.design.frames.find((f) => f.id === id)
-    if (!frame || !rectFits(this.design, rect, id)) return false
-    frame.rect = rect
-    return true
-  }
-
-  /**
-   * @param {Axis} axis
-   * @param {number} index
-   * @param {string} [size]
-   */
-  insertTrack(axis, index, size) {
-    insertTrack(this.design, axis, index, size)
-  }
-
-  /**
-   * @param {Axis} axis
-   * @param {number} index
-   */
-  removeTrack(axis, index) {
-    removeTrack(this.design, axis, index)
-    if (this.selectedId && !this.selected) this.selectedId = null
   }
 
   saveJson() {

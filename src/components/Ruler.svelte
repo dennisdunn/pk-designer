@@ -1,7 +1,7 @@
 <script>
   // Track sizes along one edge of the canvas: an editable size per track, a remove
   // button, and insert buttons at each line. Positions come from the canvas measurement.
-  import { isValidTrack } from '../lib/model.js'
+  import { insertTrack, isValidTrack, removeTrack } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
 
   /** @type {{ axis: 'columns' | 'rows', spans: { start: number, end: number }[] }} */
@@ -57,7 +57,7 @@
           aria-label="Remove {noun} {i + 1}"
           title="Remove {noun} {i + 1}"
           disabled={sizes.length <= 1}
-          onclick={() => store.removeTrack(axis, i)}>×</button
+          onclick={() => removeTrack(store.design, axis, i)}>×</button
         >
       </div>
     {/each}
@@ -68,7 +68,7 @@
         style={horizontal ? `left:${ins.at}px` : `top:${ins.at}px`}
         aria-label={ins.index === sizes.length ? `Add ${noun} at the end` : `Insert ${noun} before ${noun} ${ins.index + 1}`}
         title={ins.index === sizes.length ? `Add ${noun}` : `Insert ${noun} here`}
-        onclick={() => store.insertTrack(axis, ins.index, '1fr')}>+</button
+        onclick={() => insertTrack(store.design, axis, ins.index, '1fr')}>+</button
       >
     {/each}
   {/if}

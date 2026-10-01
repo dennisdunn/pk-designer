@@ -30,7 +30,6 @@
     const ok = sizes.length > 0 && sizes.every(isValidTrack)
     gridError[axis] = !ok
     if (ok) setTracks(store.design, axis, sizes)
-    if (store.selectedId && !store.selected) store.select(null)
   }
 </script>
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  areaNameError, fileBaseName, insertTrack, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
+  areaNameError, deleteFrame, fileBaseName, insertTrack, placeFrame, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
   splitTracks, starterDesign, MODEL_VERSION, newFrame,
 } from './model.js'
 
@@ -35,6 +35,19 @@ describe('geometry', () => {
     expect(rectFits(d, { x: 1, y: 0, w: 1, h: 1 })).toBe(false)
     expect(rectFits(d, { x: 1, y: 0, w: 1, h: 1 }, 'a')).toBe(true)
     expect(rectFits(d, { x: 0, y: 1, w: 4, h: 1 })).toBe(false)
+  })
+  it('places a frame only where it fits', () => {
+    const d = design()
+    expect(placeFrame(d, 'a', { x: 0, y: 1, w: 2, h: 1 })).toBe(true)
+    expect(d.frames[0].rect).toEqual({ x: 0, y: 1, w: 2, h: 1 })
+    expect(placeFrame(d, 'a', { x: 1, y: 1, w: 2, h: 1 })).toBe(false)
+    expect(placeFrame(d, 'nope', { x: 0, y: 0, w: 1, h: 1 })).toBe(false)
+    expect(d.frames[0].rect).toEqual({ x: 0, y: 1, w: 2, h: 1 })
+  })
+  it('deletes a frame by id', () => {
+    const d = design()
+    deleteFrame(d, 'a')
+    expect(d.frames.map((f) => f.id)).toEqual(['b'])
   })
   it('grows spanning frames and shifts later ones when inserting a track', () => {
     const d = design()

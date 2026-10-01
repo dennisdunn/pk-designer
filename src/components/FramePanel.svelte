@@ -2,7 +2,7 @@
   // Inspector for the selected frame. Keyed on the frame id by the parent, so local
   // state (the area-name draft, position errors) resets when the selection changes.
   // Edits go straight into the store's design, which is the one source of truth.
-  import { FRAME_TYPES, MODIFIERS, areaNameError } from '../lib/model.js'
+  import { FRAME_TYPES, MODIFIERS, areaNameError, deleteFrame, placeFrame } from '../lib/model.js'
   import { store, themes } from '../lib/store.svelte.js'
 
   // Only mounted while a frame is selected.
@@ -29,7 +29,7 @@
   function setRect(key, e) {
     const n = parseInt(e.currentTarget.value, 10)
     const value = key === 'x' || key === 'y' ? n - 1 : n
-    if (Number.isInteger(n) && store.setRect(frame.id, { ...frame.rect, [key]: value })) {
+    if (Number.isInteger(n) && placeFrame(store.design, frame.id, { ...frame.rect, [key]: value })) {
       rectError = ''
     } else {
       rectError = 'That would overlap another frame or leave the grid.'
@@ -175,7 +175,7 @@
     {#if rectError}<p class="help error" role="status">{rectError}</p>{/if}
   </fieldset>
 
-  <button type="button" class="danger" data-code="DEL" onclick={() => store.deleteFrame(frame.id)}>
+  <button type="button" class="danger" data-code="DEL" onclick={() => deleteFrame(store.design, frame.id)}>
     Delete frame
   </button>
 </section>

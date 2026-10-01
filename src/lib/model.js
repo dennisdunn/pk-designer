@@ -1,5 +1,10 @@
 // The design model: plain JSON, no DOM. Everything else (preview, export,
-// save/load, autosave) is derived from one of these objects.
+// save/load, autosave, undo) is derived from one of these objects.
+//
+// The functions here that change a design (placeFrame, deleteFrame, insertTrack, ...)
+// are the way to edit frames and tracks: components call them on `store.design`.
+// Plain fields (titles, themes, tokens) are edited directly. The store only adds
+// editor state on top: selection, history, files.
 
 // The file format's version. Not to be confused with `page.version`, the design's own
 // version number, which the user bumps and which goes into download filenames.
@@ -199,6 +204,27 @@ export function rectFromCells(a, b) {
   const x = Math.min(a.x, b.x)
   const y = Math.min(a.y, b.y)
   return { x, y, w: Math.abs(a.x - b.x) + 1, h: Math.abs(a.y - b.y) + 1 }
+}
+
+/**
+ * Move or resize frame `id`, only if `rect` fits. Returns whether it did.
+ * @param {Design} design
+ * @param {string} id
+ * @param {Rect} rect
+ */
+export function placeFrame(design, id, rect) {
+  const frame = design.frames.find((f) => f.id === id)
+  if (!frame || !rectFits(design, rect, id)) return false
+  frame.rect = rect
+  return true
+}
+
+/**
+ * @param {Design} design
+ * @param {string} id
+ */
+export function deleteFrame(design, id) {
+  design.frames = design.frames.filter((f) => f.id !== id)
 }
 
 /**
