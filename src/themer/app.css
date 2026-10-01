@@ -1,0 +1,374 @@
+/* The themer's own UI. Unlayered, so it beats protokuda's layers; protokuda only
+   styles form controls inside .pk-screen, so these controls are ours alone.
+   Prototype-era look: square buttons with code numbers, thin bars, no curves. */
+
+:root {
+  --ui-bg: #000;
+  --ui-panel: #0c0c14;
+  --ui-line: #334;
+  --ui-text: #cdf; /* periwinkle */
+  --ui-muted: #99c; /* blue bell */
+  --ui-primary: #fc6; /* golden tanoi */
+  --ui-on-primary: #000;
+  --ui-accent: #9cf; /* anakiwa */
+  --ui-on-accent: #000;
+  --ui-danger: #f96; /* orange peel */
+  --ui-on-danger: #000;
+  --ui-font: 'Antonio', 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100dvh;
+  font-family: var(--ui-font);
+  letter-spacing: 0.03em;
+  color: var(--ui-text);
+  background: var(--ui-bg);
+}
+
+#app {
+  display: contents;
+}
+
+.toolbar :focus-visible,
+.inspector :focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.5rem 1.25rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 0.5rem solid var(--ui-primary);
+}
+
+.toolbar h1 {
+  margin: 0 1rem 0 0;
+  align-self: center;
+  font-size: 1.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.toolbar .mark {
+  color: var(--ui-primary);
+}
+.toolbar .version {
+  font-size: 0.8rem;
+  color: var(--ui-muted);
+  letter-spacing: 0.06em;
+}
+
+.toolbar nav {
+  display: flex;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--ui-muted);
+}
+
+.toolbar .message {
+  margin: 0;
+  align-self: center;
+  color: var(--ui-primary);
+}
+
+/* Okuda-style square buttons with a code number in the corner. */
+.toolbar button,
+.inspector button:not(.icon) {
+  min-width: 5.5rem;
+  padding: 0.4rem 0.5rem 0.3rem;
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ui-on-primary);
+  background: var(--ui-primary);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+.toolbar button.alt {
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+}
+button[data-code]::after {
+  content: attr(data-code);
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.7em;
+  text-align: right;
+  opacity: 0.75;
+}
+.toolbar button:hover:not(:disabled),
+.inspector button:not(.icon):hover {
+  filter: brightness(0.85);
+}
+.toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------- workspace ---------- */
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24rem;
+  min-height: 0;
+}
+
+.inspector {
+  overflow-y: auto;
+  background: var(--ui-panel);
+  border-left: 3px solid var(--ui-muted);
+}
+
+.panel {
+  margin: 0;
+  padding: 0.75rem 1rem 1rem;
+  border-bottom: 3px solid var(--ui-line);
+}
+.panel h2 {
+  margin: -0.75rem -1rem 0.75rem;
+  padding: 0.25rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ui-on-primary);
+  background: var(--ui-primary);
+}
+
+.inspector .field {
+  display: grid;
+  gap: 0.2rem;
+  margin-bottom: 0.75rem;
+}
+.inspector label,
+.inspector legend {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-muted);
+}
+.inspector code {
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--ui-text);
+}
+
+.inspector input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']),
+.inspector select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  font: inherit;
+  letter-spacing: normal;
+  color: var(--ui-text);
+  background: var(--ui-bg);
+  border: 1px solid #789;
+  border-radius: 0;
+}
+.inspector input[type='range'] {
+  width: 100%;
+  accent-color: var(--ui-primary);
+}
+.inspector [aria-invalid='true'] {
+  border-color: var(--ui-danger) !important;
+}
+
+.inspector .help {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--ui-muted);
+}
+.inspector .help.error {
+  color: var(--ui-danger);
+}
+.inspector .help.summary {
+  font-size: 0.95rem;
+  color: var(--ui-text);
+}
+.inspector .help.summary.error {
+  color: var(--ui-danger);
+}
+.inspector a {
+  color: var(--ui-accent);
+}
+
+.inspector label.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  text-transform: none;
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.inspector label.choice input {
+  accent-color: var(--ui-primary);
+  margin: 0;
+}
+.inspector output {
+  color: var(--ui-text);
+  text-transform: none;
+}
+
+.inspector .row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+}
+.inspector button.small {
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--ui-on-accent);
+  background: var(--ui-accent);
+}
+
+/* A token: swatch, label, then its value. */
+.token {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.2rem 0.6rem;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+.token .swatch {
+  grid-row: span 2;
+  align-self: stretch;
+  border: 1px solid var(--ui-muted);
+}
+/* Unresolvable value: hatched, so it doesn't read as a color. */
+.token .swatch.unknown {
+  background: repeating-linear-gradient(45deg, var(--ui-line) 0 4px, transparent 4px 8px);
+}
+.token .custom {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.4rem;
+}
+.token input[type='color'] {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: none;
+  border: 1px solid #789;
+  cursor: pointer;
+}
+
+.checks {
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.checks li {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--ui-line);
+  font-size: 0.9rem;
+}
+.checks .sample {
+  display: grid;
+  place-items: center;
+  height: 2rem;
+  font-size: 1.1rem;
+  border: 1px solid var(--ui-line);
+}
+.checks .ratio {
+  font-variant-numeric: tabular-nums;
+}
+.checks li.fail .ratio {
+  color: var(--ui-danger);
+}
+
+/* ---------- preview ---------- */
+
+.stage {
+  overflow: auto;
+  min-height: 0;
+  font-family: var(--pk-sans-font-family);
+  background: var(--pk-backdrop);
+}
+.stage .pk-screen.sample {
+  min-height: 100%;
+  grid-template-columns: minmax(18rem, 3fr) minmax(14rem, 2fr);
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    'nav colors'
+    'nav scan'
+    'alert status';
+}
+.sample .nav { grid-area: nav; }
+.sample .colors { grid-area: colors; }
+.sample .scan { grid-area: scan; }
+.sample .alert { grid-area: alert; }
+.sample .status { grid-area: status; }
+
+.sample p {
+  margin: 0 0 0.75rem;
+}
+.sample .controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sample .controls input[type='text'] {
+  width: 9rem;
+}
+.sample .controls input[type='number'] {
+  width: 4rem;
+}
+.sample .shades {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+.sample .shades span {
+  padding: 0.4rem 0.4rem 0.2rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: var(--pk-letter-spacing);
+}
+
+@media (max-width: 52rem) {
+  .workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    overflow-y: auto;
+  }
+  .stage .pk-screen.sample {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'nav' 'colors' 'scan' 'alert' 'status';
+  }
+  .inspector {
+    border-left: none;
+    border-top: 3px solid var(--ui-muted);
+  }
+}
