@@ -18,5 +18,6 @@
   "dependencies": {
     "fflate": "^0.8.3",
     "protokuda": "^3.0.1"
-  }
+  },
+  "license": "MIT"
 }
