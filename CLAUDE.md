@@ -42,11 +42,11 @@ buttons with code numbers, thin bars, optional curved elbows). Keep that spirit 
 - frame inspector: type, modifiers, theme, title, label, sidebar buttons, status;
 - page theme picker and inner-radius control;
 - live preview;
-- export `index.html` and `layout.css` (two download buttons; no zip dependency yet);
+- export `index.html` and `layout.css` as one zip (Export button, `fflate`);
 - JSON save/load and localStorage autosave.
 
 **Later:** responsive layouts (a grid per breakpoint), nested frames, a theme editor (palette colors,
-contrast checks, theme file export), undo/redo and keyboard shortcuts, single-zip download.
+contrast checks, theme file export), undo/redo and keyboard shortcuts.
 
 Open questions: whether the export should offer `@3` as well as the exact version (it pins the exact
 version for now); whether to inline the CSS as an export option.

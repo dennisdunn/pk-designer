@@ -1,5 +1,6 @@
 // App state: the design (the one JSON model) plus editor-only state like selection.
 
+import { strToU8, zipSync } from 'fflate'
 import { themes, version } from 'virtual:protokuda'
 import { indexHtml, layoutCss } from './markup.js'
 import {
@@ -17,8 +18,8 @@ function loadAutosave() {
   }
 }
 
-function download(filename, text, type) {
-  const url = URL.createObjectURL(new Blob([text], { type }))
+function download(filename, data, type) {
+  const url = URL.createObjectURL(new Blob([data], { type }))
   const a = Object.assign(document.createElement('a'), { href: url, download: filename })
   document.body.append(a)
   a.click()
@@ -93,12 +94,13 @@ class Store {
     this.replace(normalizeDesign(JSON.parse(await file.text()), themes))
   }
 
-  exportHtml() {
-    download('index.html', indexHtml(this.design, { version }), 'text/html')
-  }
-
-  exportCss() {
-    download('layout.css', layoutCss(this.design), 'text/css')
+  /** One zip with index.html and layout.css side by side, ready to unzip and open. */
+  exportZip() {
+    const zip = zipSync({
+      'index.html': strToU8(indexHtml(this.design, { version })),
+      'layout.css': strToU8(layoutCss(this.design)),
+    })
+    download(`${slug(this.design.page.title)}.zip`, zip, 'application/zip')
   }
 }
 

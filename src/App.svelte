@@ -45,8 +45,8 @@
     <button type="button" data-code="02-0001" onclick={addFrame}>Add frame</button>
   </nav>
   <nav aria-label="Export">
-    <button type="button" class="alt" data-code="03-0001" onclick={() => store.exportHtml()}>index.html</button>
-    <button type="button" class="alt" data-code="03-0002" onclick={() => store.exportCss()}>layout.css</button>
+    <button type="button" class="alt" data-code="03-0001" title="Download index.html and layout.css as a zip"
+      onclick={() => store.exportZip()}>Export</button>
   </nav>
   <p class="message" role="status">{message}</p>
 </header>
