@@ -3,8 +3,9 @@
   import Preview from './components/Preview.svelte'
   import ThemePanel from './components/ThemePanel.svelte'
   import TokenRow from './components/TokenRow.svelte'
-  import { GROUPS, fileBaseName } from './lib/theme.js'
-  import { store, version } from './lib/store.svelte.js'
+  import { pkVersion, store } from './lib/store.svelte.js'
+  import { fileBaseName } from './lib/theme.js'
+  import { GROUPS } from './lib/tokens.js'
 
   let fileInput
   let message = $state('')
@@ -59,7 +60,7 @@
 <svelte:window onkeydown={shortcuts} />
 
 <header class="toolbar">
-  <h1><span class="mark">Protokuda</span> Themer <span class="version">pk {version}</span></h1>
+  <h1><span class="mark">Protokuda</span> Themer <span class="version">pk {pkVersion}</span></h1>
   <nav aria-label="Theme file">
     <button type="button" data-code="01-0001" title="Open a theme .css file" onclick={() => fileInput.click()}>Open</button>
     <input bind:this={fileInput} type="file" accept=".css,text/css" hidden onchange={open} />

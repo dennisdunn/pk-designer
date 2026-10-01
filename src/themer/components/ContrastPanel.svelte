@@ -1,9 +1,9 @@
 <script>
   // WCAG AA checks over the pairs of tokens that sit on each other.
-  import { contrastChecks } from '../lib/theme.js'
-  import { palette, store } from '../lib/store.svelte.js'
+  import { store } from '../lib/store.svelte.js'
+  import { bare } from '../lib/tokens.js'
 
-  const checks = $derived(contrastChecks(store.theme, palette))
+  const checks = $derived(store.checks)
 </script>
 
 <section class="panel" aria-labelledby="ins-contrast-heading">
@@ -13,7 +13,7 @@
     {#each checks as c (c.label)}
       <li class:fail={!c.pass}>
         <span class="sample" style:color={c.fgColor} style:background={c.bgColor} aria-hidden="true">Aa</span>
-        <span class="what">{c.label}<br /><code>{c.fg.slice(5)} / {c.bg.slice(5)}</code></span>
+        <span class="what">{c.label}<br /><code>{bare(c.fg)} / {bare(c.bg)}</code></span>
         <span class="ratio">
           {#if c.ratio === null}
             ? unknown

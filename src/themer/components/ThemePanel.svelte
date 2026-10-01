@@ -1,10 +1,10 @@
 <script>
   // The theme's name and label, a starting point, and the preview options.
-  import { contrastChecks, fileBaseName, isValidName, nameFor } from '../lib/theme.js'
-  import { palette, startFrom, store, themes } from '../lib/store.svelte.js'
+  import { store, themes } from '../lib/store.svelte.js'
+  import { fileBaseName, isValidName, nameFor } from '../lib/theme.js'
 
   const theme = $derived(store.theme)
-  const failing = $derived(contrastChecks(theme, palette).filter((c) => !c.pass).length)
+  const failing = $derived(store.failing)
 
   let base = $state(Object.keys(themes)[0])
   let nameError = $state(false)
@@ -82,7 +82,7 @@
           <option value={t.name}>{t.label}</option>
         {/each}
       </select>
-      <button type="button" class="small" onclick={() => store.replace(startFrom(base))}>Load</button>
+      <button type="button" class="small" onclick={() => store.startFrom(base)}>Load</button>
     </div>
     <p class="help">Replaces every token with a copy of a built-in theme. Undo brings yours back.</p>
   </div>

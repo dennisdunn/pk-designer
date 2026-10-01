@@ -3,7 +3,8 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { defineConfig } from 'vite'
-import { labelFor, paletteFrom, parseTheme } from './src/lib/theme.js'
+import { paletteFrom, parseTheme } from './src/lib/css.js'
+import { labelFor } from './src/lib/theme.js'
 
 // `virtual:protokuda` exposes facts about the installed protokuda package: its version,
 // its palette (from dist/protokuda.css) and its themes (from dist/themes). Nothing here
@@ -28,7 +29,7 @@ function protokudaInfo() {
           .map((f) => {
             const name = f.slice(0, -'.css'.length)
             const { tokens } = parseTheme(readFileSync(join(dist, 'themes', f), 'utf8'), name)
-            return [name, { name, label: labelFor(name, palette), tokens }]
+            return [name, { name, label: labelFor(name, palette), version: 1, tokens }]
           }),
       )
       return [

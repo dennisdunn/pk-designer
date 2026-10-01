@@ -20,16 +20,24 @@ square buttons with code numbers, thin bars, no curves) and its stack and conven
   linking) and a `README.md` on using it, with CDN links pinned to the installed Protokuda version.
 - **Nothing hard-coded from the package**: `virtual:protokuda` (vite.config.js) gives the version, the
   palette (parsed from `dist/protokuda.css`) and the built-in themes (from `dist/themes/`). The token
-  schema in `src/lib/theme.js` is the exception; a test checks it against the default theme's tokens.
+  schema in `src/lib/tokens.js` is the exception; a test checks it against the default theme's tokens.
 - **WYSIWYG preview**: the real `protokuda.css`, with the theme's tokens as inline custom properties on
   the stage (inline beats protokuda's layers).
-- **Contrast**: WCAG AA, 4.5:1 for text pairs, 3:1 for frame edges and focus rings (`PAIRS` in theme.js).
+- **Contrast**: WCAG AA, 4.5:1 for text pairs, 3:1 for frame edges and focus rings (`PAIRS` in color.js).
+- **Two versions, kept apart by name**: `pkVersion` is the installed Protokuda package's (`virtual:protokuda`
+  exports it as `version`; import it as `pkVersion`), `theme.version` is the user's theme counter.
 
 ## Code map
 
-- `src/lib/theme.js`: token schema (`GROUPS`), parse/write theme CSS, the export README, resolve values
-  to colors, contrast.
-- `src/lib/store.svelte.js`: the theme `$state`, preview options, autosave, open/export.
+- `src/lib/tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`,
+  `valueKind()` says whether a value is unset, custom hex, a palette color, a token reference or other.
+- `src/lib/theme.js`: the `Theme` type and model operations: naming, `startFrom`, `completeTheme`.
+- `src/lib/css.js`: reading theme CSS (`parseTheme`, `paletteFrom`) and writing it (`themeCss`, `sourceCss`).
+- `src/lib/color.js`: resolving values to colors, cycle detection, contrast and `contrastChecks`.
+- `src/lib/readme.js` + `readme.md`: the export README; edit the Markdown, `{{key}}` placeholders are filled
+  in by `readme()`, which throws on a placeholder it has no value for.
+- `src/lib/store.svelte.js`: the theme `$state`, derived contrast `checks`, preview options, autosave, open/export.
+- `src/lib/fixtures.js`: tests only; reads the installed package's built files.
 - `src/lib/history.svelte.js`: undo/redo over JSON snapshots (copied from pk-designer).
 - `src/components/`: `Preview`, `ThemePanel` (label, name, version, start from, preview options),
   `TokenRow`, `ContrastPanel`.

@@ -1,26 +1,31 @@
 <script>
   // One token: a palette color, another token, or a custom hex color.
-  import { TOKENS, isHex, resolve, titleCase, varName, wouldCycle } from '../lib/theme.js'
+  import { resolve, wouldCycle } from '../lib/color.js'
   import { palette, store } from '../lib/store.svelte.js'
+  import { titleCase } from '../lib/theme.js'
+  import { TOKENS, bare, isHex, valueKind } from '../lib/tokens.js'
 
-  /** @type {{ token: import('../lib/theme.js').TokenDef }} */
+  /** @type {{ token: import('../lib/tokens.js').TokenDef }} */
   let { token } = $props()
 
+  // The select's option values: a palette or token reference is its own CSS value;
+  // the other kinds get a sentinel.
+  const UNSET = ''
   const CUSTOM = '#custom'
+  const OTHER = '#other'
+
   const theme = $derived(store.theme)
   const value = $derived(theme.tokens[token.name] ?? '')
+  const kind = $derived(valueKind(value, palette))
   const color = $derived(resolve(theme, token.name, palette))
-  const ref = $derived(varName(value))
-  const choice = $derived(
-    !value ? '' : isHex(value) ? CUSTOM : ref && (palette[ref.slice(5)] || TOKENS.some((t) => t.name === ref)) ? value : 'other',
-  )
+  const choice = $derived({ unset: UNSET, custom: CUSTOM, other: OTHER, palette: value, token: value }[kind])
   const id = $derived(`tok${token.name}`)
 
   function choose(e) {
     const v = e.currentTarget.value
     if (v === CUSTOM) theme.tokens[token.name] = color ?? '#ffffff'
-    else if (v === '') delete theme.tokens[token.name]
-    else if (v !== 'other') theme.tokens[token.name] = v
+    else if (v === UNSET) delete theme.tokens[token.name]
+    else if (v !== OTHER) theme.tokens[token.name] = v
   }
 
   function setHex(e) {
@@ -37,10 +42,10 @@
   <label for={id}>{token.label} <code>{token.name}</code></label>
   <select {id} value={choice} onchange={choose}>
     {#if token.optional}
-      <option value="">Unset (follows {token.unset})</option>
+      <option value={UNSET}>Unset (follows {token.unset})</option>
     {/if}
-    {#if choice === 'other'}
-      <option value="other">{value}</option>
+    {#if kind === 'other'}
+      <option value={OTHER}>{value}</option>
     {/if}
     <option value={CUSTOM}>Custom color…</option>
     <optgroup label="Palette">
@@ -51,12 +56,12 @@
     <optgroup label="Theme tokens">
       {#each TOKENS as t (t.name)}
         {#if t.name !== token.name}
-          <option value="var({t.name})" disabled={wouldCycle(theme, token.name, t.name)}>{t.label} ({t.name.slice(5)})</option>
+          <option value="var({t.name})" disabled={wouldCycle(theme, token.name, t.name)}>{t.label} ({bare(t.name)})</option>
         {/if}
       {/each}
     </optgroup>
   </select>
-  {#if choice === CUSTOM}
+  {#if kind === 'custom'}
     <div class="custom">
       <input type="color" aria-label="{token.label} color" value={color ?? '#000000'}
         oninput={(e) => (theme.tokens[token.name] = e.currentTarget.value)} />
