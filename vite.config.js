@@ -28,5 +28,7 @@ function protokudaInfo() {
 }
 
 export default defineConfig({
+  // Relative asset URLs, so the build works under GitHub Pages' /pk-designer/ path (or anywhere).
+  base: './',
   plugins: [svelte(), protokudaInfo()],
 })

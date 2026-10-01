@@ -53,7 +53,8 @@ version for now); whether to inline the CSS as an export option.
 
 ## Code map
 
-- `npm run dev` / `npm test` / `npm run build`.
+- `npm run dev` / `npm test` / `npm run build`. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
+  on `v*` tags (`npm version ...`) or a manual run.
 - `vite.config.js`: the `virtual:protokuda` module gives the installed package's `version` and `themes`.
 - `src/lib/model.js`: the JSON model, geometry (fits/overlap, insert/remove tracks), loading/validation.
 - `src/lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
