@@ -1,0 +1,262 @@
+// The design model: plain JSON, no DOM. Everything else (preview, export,
+// save/load, autosave) is derived from one of these objects.
+
+export const MODEL_VERSION = 1
+
+export const FRAME_TYPES = [
+  { value: 'frame', label: 'Box', className: null },
+  { value: 'std', label: 'Standard', className: 'pk-std' },
+  { value: 'partial', label: 'Partial', className: 'pk-partial' },
+  { value: 'bracket', label: 'Bracket', className: 'pk-bracket' },
+]
+
+export const MODIFIERS = [
+  { value: 'sidebar', label: 'Sidebar' },
+  { value: 'statusline', label: 'Statusline' },
+  { value: 'mirror', label: 'Mirror' },
+  { value: 'flip', label: 'Flip' },
+  { value: 'alert', label: 'Alert' },
+]
+
+// Page-level tokens the inspector offers. An empty value means "library default".
+export const PAGE_TOKENS = [
+  { name: '--pk-frame-line', label: 'Frame line', placeholder: '3px' },
+  { name: '--pk-frame-bar', label: 'Frame bar', placeholder: '0.5rem' },
+  { name: '--pk-frame-side', label: 'Frame side', placeholder: '1.1rem' },
+  { name: '--pk-frame-radius', label: 'Frame radius', placeholder: '2rem' },
+  { name: '--pk-sidebar-width', label: 'Sidebar width', placeholder: '5rem' },
+  { name: '--pk-statusline-height', label: 'Statusline height', placeholder: '2rem' },
+]
+
+export const DEFAULT_THEME = 'greysmoke'
+
+const RESERVED_AREAS = new Set([
+  'auto', 'span', 'none', 'default', 'inherit', 'initial', 'unset', 'revert', 'revert-layer',
+])
+
+// ---------- ids and names ----------
+
+let idCounter = 0
+export function newId() {
+  return globalThis.crypto?.randomUUID?.() ?? `f${Date.now().toString(36)}${idCounter++}`
+}
+
+/** Area names double as `grid-area` idents and HTML ids, so keep them simple. */
+export function areaNameError(name, design, selfId) {
+  if (!name) return 'Required.'
+  if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(name)) return 'Letters, digits, - and _; start with a letter.'
+  if (RESERVED_AREAS.has(name.toLowerCase())) return `"${name}" is reserved in CSS.`
+  if (design.frames.some((f) => f.id !== selfId && f.area === name)) return 'Already used by another frame.'
+  return null
+}
+
+export function nextAreaName(design) {
+  const used = new Set(design.frames.map((f) => f.area))
+  for (let i = 1; ; i++) if (!used.has(`frame-${i}`)) return `frame-${i}`
+}
+
+// ---------- track sizes ----------
+
+const SIMPLE_TRACK = /^(\d*\.?\d+)(fr|px|rem|em|%)$/
+
+/** `1fr` -> {n: 1, unit: 'fr'}; anything fancier (auto, minmax(), ...) -> null. */
+export function parseTrack(value) {
+  const m = SIMPLE_TRACK.exec(String(value).trim())
+  return m ? { n: parseFloat(m[1]), unit: m[2] } : null
+}
+
+/** Split a template like `14rem minmax(0, 1fr) auto` into its tracks. */
+export function splitTracks(template) {
+  const out = []
+  let depth = 0
+  let cur = ''
+  for (const ch of String(template).trim()) {
+    if (ch === '(') depth++
+    if (ch === ')') depth--
+    if (/\s/.test(ch) && depth === 0) {
+      if (cur) out.push(cur)
+      cur = ''
+    } else cur += ch
+  }
+  if (cur) out.push(cur)
+  return out
+}
+
+/** One track size, e.g. `1fr`, `200px`, `auto`, `minmax(8rem, 1fr)`. No repeat(), no line names. */
+export function isValidTrack(value) {
+  const v = String(value).trim()
+  if (!v || splitTracks(v).length !== 1 || /repeat\(|\[/i.test(v)) return false
+  if (globalThis.CSS?.supports) return CSS.supports('grid-template-columns', v)
+  return SIMPLE_TRACK.test(v) || /^(auto|min-content|max-content)$/.test(v) || /^(minmax|fit-content)\(.+\)$/.test(v)
+}
+
+/** A CSS length for a page token, e.g. `1.5rem`. Empty means "unset". */
+export function isValidLength(value) {
+  const v = String(value).trim()
+  if (!v) return true
+  if (/[;{}]/.test(v)) return false
+  if (globalThis.CSS?.supports) return CSS.supports('width', v)
+  return /^-?(\d*\.?\d+)(px|rem|em|%|vw|vh)$|^0$/.test(v)
+}
+
+// ---------- geometry ----------
+
+export function rectsOverlap(a, b) {
+  return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+}
+
+export function rectInGrid(grid, r) {
+  return r.w >= 1 && r.h >= 1 && r.x >= 0 && r.y >= 0 &&
+    r.x + r.w <= grid.columns.length && r.y + r.h <= grid.rows.length
+}
+
+/** Can `rect` be placed without leaving the grid or overlapping another frame? */
+export function rectFits(design, rect, ignoreId = null) {
+  return rectInGrid(design.grid, rect) &&
+    !design.frames.some((f) => f.id !== ignoreId && rectsOverlap(f.rect, rect))
+}
+
+/** The rectangle spanned by two cells, in either order. */
+export function rectFromCells(a, b) {
+  const x = Math.min(a.x, b.x)
+  const y = Math.min(a.y, b.y)
+  return { x, y, w: Math.abs(a.x - b.x) + 1, h: Math.abs(a.y - b.y) + 1 }
+}
+
+export function frameAtCell(design, x, y) {
+  return design.frames.find((f) => rectsOverlap(f.rect, { x, y, w: 1, h: 1 })) ?? null
+}
+
+export function firstEmptyCell(design) {
+  for (let y = 0; y < design.grid.rows.length; y++)
+    for (let x = 0; x < design.grid.columns.length; x++)
+      if (!frameAtCell(design, x, y)) return { x, y }
+  return null
+}
+
+/** Insert a track before `index` on axis 'columns' or 'rows'. Frames spanning the insertion point grow. */
+export function insertTrack(design, axis, index, size = '1fr') {
+  const [pos, len] = axis === 'columns' ? ['x', 'w'] : ['y', 'h']
+  design.grid[axis].splice(index, 0, size)
+  for (const f of design.frames) {
+    if (f.rect[pos] >= index) f.rect[pos]++
+    else if (f.rect[pos] + f.rect[len] > index) f.rect[len]++
+  }
+}
+
+/** Remove the track at `index`. Frames entirely inside it are deleted; spanning frames shrink. */
+export function removeTrack(design, axis, index) {
+  if (design.grid[axis].length <= 1) return
+  const [pos, len] = axis === 'columns' ? ['x', 'w'] : ['y', 'h']
+  design.grid[axis].splice(index, 1)
+  design.frames = design.frames.filter((f) => !(f.rect[pos] === index && f.rect[len] === 1))
+  for (const f of design.frames) {
+    if (f.rect[pos] > index) f.rect[pos]--
+    else if (f.rect[pos] + f.rect[len] > index) f.rect[len]--
+  }
+}
+
+/** Replace a whole axis from a template string; extra tracks are added or removed at the end. */
+export function setTracks(design, axis, sizes) {
+  while (design.grid[axis].length > sizes.length) removeTrack(design, axis, design.grid[axis].length - 1)
+  sizes.forEach((s, i) => {
+    if (i < design.grid[axis].length) design.grid[axis][i] = s
+    else insertTrack(design, axis, i, s)
+  })
+}
+
+// ---------- construction and loading ----------
+
+export function newFrame(design, rect) {
+  return {
+    id: newId(),
+    area: nextAreaName(design),
+    rect,
+    type: 'std',
+    modifiers: [],
+    theme: '',
+    title: '',
+    label: [],
+    items: [],
+    status: '',
+  }
+}
+
+export function starterDesign() {
+  const frame = (area, rect, rest) => ({ ...newFrame({ frames: [] }, rect), area, ...rest })
+  return {
+    version: MODEL_VERSION,
+    grid: { columns: ['14rem', '1fr'], rows: ['7rem', '1fr', '6rem'] },
+    page: { title: 'Protokuda screen', theme: DEFAULT_THEME, alert: false, tokens: { '--pk-inner-radius': '0rem' } },
+    frames: [
+      frame('header', { x: 0, y: 0, w: 2, h: 1 }, { title: 'Main bridge', label: ['Deck 1'] }),
+      frame('nav', { x: 0, y: 1, w: 1, h: 2 }, {
+        modifiers: ['sidebar'],
+        title: 'Navigation',
+        items: [
+          { text: 'Course', code: '47-1138' },
+          { text: 'Sensors', code: '22-0451' },
+        ],
+      }),
+      frame('main', { x: 1, y: 1, w: 1, h: 1 }, { type: 'partial', title: 'Viewscreen' }),
+      frame('status', { x: 1, y: 2, w: 1, h: 1 }, {
+        type: 'bracket', label: ['Systems nominal'],
+      }),
+    ],
+  }
+}
+
+const str = (v, fallback = '') => (typeof v === 'string' ? v : fallback)
+const int = (v) => (Number.isInteger(v) ? v : NaN)
+
+/**
+ * Turn untrusted JSON (a loaded file, localStorage) into a valid design.
+ * Bad tracks become `1fr`; frames that are invalid, out of the grid or overlap an
+ * earlier frame are dropped. Throws if it isn't a design at all.
+ */
+export function normalizeDesign(raw, knownThemes = null) {
+  if (!raw || typeof raw !== 'object' || !raw.grid || !Array.isArray(raw.frames)) {
+    throw new Error('Not a Protokuda Designer file.')
+  }
+  const okTheme = (t) => typeof t === 'string' && (!knownThemes || knownThemes.includes(t))
+  const tracks = (list) => {
+    const out = (Array.isArray(list) ? list : []).map((t) => (isValidTrack(t) ? String(t).trim() : '1fr'))
+    return out.length ? out : ['1fr']
+  }
+  const page = raw.page ?? {}
+  const tokens = {}
+  for (const [k, v] of Object.entries(page.tokens ?? {})) {
+    if (/^--pk-[a-z-]+$/.test(k) && typeof v === 'string' && isValidLength(v)) tokens[k] = v.trim()
+  }
+  const design = {
+    version: MODEL_VERSION,
+    grid: { columns: tracks(raw.grid.columns), rows: tracks(raw.grid.rows) },
+    page: {
+      title: str(page.title, 'Protokuda screen'),
+      theme: okTheme(page.theme) ? page.theme : DEFAULT_THEME,
+      alert: page.alert === true,
+      tokens,
+    },
+    frames: [],
+  }
+  const types = FRAME_TYPES.map((t) => t.value)
+  const mods = MODIFIERS.map((m) => m.value)
+  for (const f of raw.frames) {
+    if (!f || typeof f !== 'object' || !f.rect) continue
+    const rect = { x: int(f.rect.x), y: int(f.rect.y), w: int(f.rect.w), h: int(f.rect.h) }
+    if (!rectFits(design, rect)) continue
+    const frame = newFrame(design, rect)
+    if (typeof f.area === 'string' && !areaNameError(f.area, design, frame.id)) frame.area = f.area
+    frame.type = types.includes(f.type) ? f.type : 'std'
+    frame.modifiers = mods.filter((m) => Array.isArray(f.modifiers) && f.modifiers.includes(m))
+    frame.theme = okTheme(f.theme) ? f.theme : ''
+    frame.title = str(f.title)
+    frame.label = Array.isArray(f.label) ? f.label.filter((l) => typeof l === 'string') : []
+    frame.items = Array.isArray(f.items)
+      ? f.items.filter((i) => i && typeof i === 'object').map((i) => ({ text: str(i.text), code: str(i.code) }))
+      : []
+    frame.status = str(f.status)
+    design.frames.push(frame)
+  }
+  return design
+}

@@ -32,8 +32,8 @@ buttons with code numbers, thin bars, optional curved elbows). Keep that spirit 
 - **Save/load** designs as `.json` files, and **autosave** to `localStorage` (wrapped in try/catch).
 - **Frame content is placeholders only**: titles, labels, sidebar buttons and status text. Not arbitrary
   content inside frames; that's a page builder, not this app.
-- **Tooling:** Vite plus a light framework. This is a stateful JS app (selection, dragging, undo), which
-  is what Vite is good at. Framework still to choose: Svelte, Preact or Lit.
+- **Tooling:** Vite + Svelte 5 (runes). The design lives in one `$state` object in
+  `src/lib/store.svelte.js`; components edit it directly. Vitest for the pure modules.
 
 ## Plan
 
@@ -48,8 +48,19 @@ buttons with code numbers, thin bars, optional curved elbows). Keep that spirit 
 **Later:** responsive layouts (a grid per breakpoint), nested frames, a theme editor (palette colors,
 contrast checks, theme file export), undo/redo and keyboard shortcuts, single-zip download.
 
-Open questions: framework choice; whether the export should offer pinning an exact version vs `@3`;
-whether to inline the CSS as an export option.
+Open questions: whether the export should offer `@3` as well as the exact version (it pins the exact
+version for now); whether to inline the CSS as an export option.
+
+## Code map
+
+- `npm run dev` / `npm test` / `npm run build`.
+- `vite.config.js`: the `virtual:protokuda` module gives the installed package's `version` and `themes`.
+- `src/lib/model.js`: the JSON model, geometry (fits/overlap, insert/remove tracks), loading/validation.
+- `src/lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
+  (scoped to `.pv`, frames matched by `data-area`, screen `inert`), so preview and export can't drift.
+- `src/lib/tracks.js`: dragging the line between two tracks, keeping each track's unit.
+- `src/components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
+  positioned from the screen's computed `grid-template-columns/rows`.
 
 ## Protokuda 3.x reference
 
