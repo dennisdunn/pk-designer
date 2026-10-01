@@ -9,6 +9,10 @@ import {
   fileBaseName, firstEmptyCell, insertTrack, newFrame, normalizeDesign, rectFits, removeTrack, starterDesign,
 } from './model.js'
 
+/** @typedef {import('./model.js').Design} Design */
+/** @typedef {import('./model.js').Rect} Rect */
+/** @typedef {import('./model.js').Axis} Axis */
+
 const STORAGE_KEY = 'pk-designer:design'
 
 function loadAutosave() {
@@ -31,6 +35,7 @@ function download(filename, data, type) {
 
 class Store {
   design = $state(loadAutosave() ?? starterDesign())
+  /** @type {string | null} */
   selectedId = $state(null)
 
   selected = $derived(this.design.frames.find((f) => f.id === this.selectedId) ?? null)
@@ -58,21 +63,28 @@ class Store {
     this.#restore(this.history.redo())
   }
 
+  /** @param {string | null} json */
   #restore(json) {
     if (json === null) return
     this.design = JSON.parse(json)
     if (this.selectedId && !this.selected) this.selectedId = null
   }
 
+  /** @param {string | null} id */
   select(id) {
     this.selectedId = id
   }
 
+  /** @param {Design} design */
   replace(design) {
     this.design = design
     this.selectedId = null
   }
 
+  /**
+   * Add a frame at `rect`, or in the first empty cell. Returns null if there's no room.
+   * @param {Rect | null} [rect]
+   */
   addFrame(rect = null) {
     rect ??= (() => {
       const cell = firstEmptyCell(this.design)
@@ -85,12 +97,17 @@ class Store {
     return frame
   }
 
+  /** @param {string} id */
   deleteFrame(id) {
     this.design.frames = this.design.frames.filter((f) => f.id !== id)
     if (this.selectedId === id) this.selectedId = null
   }
 
-  /** Move or resize a frame, only if the result is a valid placement. */
+  /**
+   * Move or resize a frame, only if the result is a valid placement.
+   * @param {string} id
+   * @param {Rect} rect
+   */
   setRect(id, rect) {
     const frame = this.design.frames.find((f) => f.id === id)
     if (!frame || !rectFits(this.design, rect, id)) return false
@@ -98,10 +115,19 @@ class Store {
     return true
   }
 
+  /**
+   * @param {Axis} axis
+   * @param {number} index
+   * @param {string} [size]
+   */
   insertTrack(axis, index, size) {
     insertTrack(this.design, axis, index, size)
   }
 
+  /**
+   * @param {Axis} axis
+   * @param {number} index
+   */
   removeTrack(axis, index) {
     removeTrack(this.design, axis, index)
     if (this.selectedId && !this.selected) this.selectedId = null
@@ -111,6 +137,7 @@ class Store {
     download(`${fileBaseName(this.design)}.json`, JSON.stringify(this.design, null, 2) + '\n', 'application/json')
   }
 
+  /** @param {File} file */
   async openJson(file) {
     this.replace(normalizeDesign(JSON.parse(await file.text()), themes))
   }

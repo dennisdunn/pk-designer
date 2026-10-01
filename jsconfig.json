@@ -23,7 +23,12 @@
      * Typecheck JS in `.svelte` and `.js` files by default.
      * Disable this if you'd like to use dynamic types.
      */
-    "checkJs": true
+    "checkJs": true,
+    /**
+     * The shared types (Design, Frame, ...) are JSDoc typedefs in src/lib/model.js.
+     * Untyped parameters are allowed; annotate where the type carries meaning.
+     */
+    "noImplicitAny": false
   },
   /**
    * Use global.d.ts instead of compilerOptions.types

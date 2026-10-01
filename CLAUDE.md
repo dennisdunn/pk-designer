@@ -53,10 +53,11 @@ version for now); whether to inline the CSS as an export option.
 
 ## Code map
 
-- `npm run dev` / `npm test` / `npm run build`. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
+- `npm run dev` / `npm test` / `npm run check` (svelte-check) / `npm run build`. CI (`ci.yml`) runs check,
+  test and build on every push. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
   on `v*` tags (`npm version ...`) or a manual run.
 - `vite.config.js`: the `virtual:protokuda` module gives the installed package's `version` and `themes`.
-- `src/lib/model.js`: the JSON model, geometry (fits/overlap, insert/remove tracks), loading/validation.
+- `src/lib/model.js`: the JSON model (JSDoc typedefs `Design`, `Frame`, `Rect`, ... at the top), geometry (fits/overlap, insert/remove tracks), loading/validation.
 - `src/lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
   (scoped to `.pv`, frames matched by `data-area`, screen `inert`), so preview and export can't drift.
 - `src/lib/history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step.

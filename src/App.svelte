@@ -40,7 +40,7 @@
       await store.openJson(file)
       message = `Opened ${file.name}.`
     } catch (err) {
-      message = `Couldn't open ${file.name}: ${err.message}`
+      message = `Couldn't open ${file.name}: ${err instanceof Error ? err.message : err}`
     }
   }
 

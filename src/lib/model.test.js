@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import {
   areaNameError, fileBaseName, insertTrack, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
-  splitTracks, starterDesign,
+  splitTracks, starterDesign, MODEL_VERSION, newFrame,
 } from './model.js'
 
+/** @type {(id: string, rect: import('./model.js').Rect) => import('./model.js').Frame} */
+const frame = (id, rect) => ({ ...newFrame({ frames: [] }, rect), id, area: id })
+
+/**
+ * A 3x2 grid: `a` across the top-left two cells, `b` down the right column.
+ * @returns {import('./model.js').Design}
+ */
 const design = () => ({
+  version: MODEL_VERSION,
   grid: { columns: ['1fr', '1fr', '1fr'], rows: ['1fr', '1fr'] },
-  page: { title: 't', theme: 'greysmoke', alert: false, tokens: {} },
-  frames: [
-    { id: 'a', area: 'a', rect: { x: 0, y: 0, w: 2, h: 1 } },
-    { id: 'b', area: 'b', rect: { x: 2, y: 0, w: 1, h: 2 } },
-  ],
+  page: { title: 't', version: 1, theme: 'greysmoke', alert: false, tokens: {} },
+  frames: [frame('a', { x: 0, y: 0, w: 2, h: 1 }), frame('b', { x: 2, y: 0, w: 1, h: 2 })],
 })
 
 describe('tracks', () => {
@@ -104,7 +109,7 @@ describe('design version', () => {
   })
   it('defaults to 1 for older files and bad values', () => {
     const d = starterDesign()
-    delete d.page.version
+    delete /** @type {any} */ (d.page).version
     expect(normalizeDesign(d).page.version).toBe(1)
     d.page.version = 2.5
     expect(normalizeDesign(d).page.version).toBe(1)

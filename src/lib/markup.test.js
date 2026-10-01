@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { indexHtml, layoutCss, screenMarkup, templateAreas } from './markup.js'
 import { starterDesign } from './model.js'
 
+/**
+ * @param {import('./model.js').Design} d
+ * @param {string} area
+ */
+const frameNamed = (d, area) => {
+  const f = d.frames.find((f) => f.area === area)
+  if (!f) throw new Error(`no frame ${area}`)
+  return f
+}
+
 describe('export', () => {
   const d = starterDesign()
 
@@ -38,7 +48,7 @@ describe('export', () => {
 
   it('renders frame classes and placeholder content, escaping text', () => {
     const e = structuredClone(d)
-    const nav = e.frames.find((f) => f.area === 'nav')
+    const nav = frameNamed(e, 'nav')
     nav.modifiers = ['sidebar', 'statusline', 'mirror']
     nav.theme = 'navy'
     nav.status = 'A & B'
@@ -52,7 +62,7 @@ describe('export', () => {
 
   it('omits sidebar items and status when the modifier is off', () => {
     const e = structuredClone(d)
-    const nav = e.frames.find((f) => f.area === 'nav')
+    const nav = frameNamed(e, 'nav')
     nav.modifiers = []
     nav.status = 'hidden'
     const html = screenMarkup(e)

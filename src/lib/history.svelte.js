@@ -6,14 +6,19 @@
 // started leaves no step behind.
 
 export class History {
+  /** @type {string[]} */
   past = $state.raw([])
+  /** @type {string[]} */
   future = $state.raw([])
 
-  #baseline = null // state before the open group (or the current state when idle)
+  /** @type {string | null} state before the open group (or the current state when idle) */
+  #baseline = null
+  /** @type {string | null} */
   #current = null
   #open = false
   #gesture = false
-  #timer = null
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #timer = undefined
 
   constructor({ limit = 100, groupMs = 500 } = {}) {
     this.limit = limit
@@ -28,6 +33,7 @@ export class History {
     return this.future.length > 0
   }
 
+  /** @param {string} json */
   note(json) {
     if (this.#baseline === null) {
       this.#baseline = this.#current = json
@@ -55,22 +61,28 @@ export class History {
     this.#close()
   }
 
-  /** The state to restore, or null if there's nothing to undo. */
+  /**
+   * The state to restore, or null if there's nothing to undo.
+   * @returns {string | null}
+   */
   undo() {
     this.#close()
-    if (!this.past.length) return null
-    const prev = this.past.at(-1)
+    const prev = this.past[this.past.length - 1]
+    if (prev === undefined || this.#current === null) return null
     this.past = this.past.slice(0, -1)
     this.future = [...this.future, this.#current]
     this.#baseline = this.#current = prev
     return prev
   }
 
-  /** The state to restore, or null if there's nothing to redo. */
+  /**
+   * The state to restore, or null if there's nothing to redo.
+   * @returns {string | null}
+   */
   redo() {
     this.#close()
-    if (!this.future.length) return null
-    const next = this.future.at(-1)
+    const next = this.future[this.future.length - 1]
+    if (next === undefined || this.#current === null) return null
     this.future = this.future.slice(0, -1)
     this.past = [...this.past, this.#current].slice(-this.limit)
     this.#baseline = this.#current = next

@@ -44,6 +44,7 @@ It goes into the filenames and a `<meta name="version">` in the exported HTML.
 npm install
 npm run dev      # http://localhost:5173
 npm test         # vitest
+npm run check    # svelte-check: types (JSDoc) and Svelte diagnostics
 npm run build    # static site in dist/
 ```
 
@@ -51,7 +52,7 @@ Svelte 5 and Vite. The Protokuda version and theme list come from the installed 
 build time, so updating it is just `npm install protokuda@latest`; the preview and the export's CDN link
 follow.
 
-- `src/lib/`: the parts with no DOM: the design model and its validation, the HTML/CSS export, track
+- `src/lib/`: the parts with no DOM: the design model (its types are JSDoc typedefs in `model.js`) and its validation, the HTML/CSS export, track
   resizing, undo history. These have the tests.
 - `src/components/`: the canvas (preview plus the editing layer), the rulers, and the inspector panels.
 - `CLAUDE.md`: the design decisions and a Protokuda class/token reference.
@@ -63,7 +64,8 @@ npm version minor        # or patch / major
 git push --follow-tags
 ```
 
-Pushing a `v*` tag runs `.github/workflows/deploy.yml`, which tests, builds and deploys to GitHub Pages.
+Every push runs `.github/workflows/ci.yml` (type-check, tests, build). Pushing a `v*` tag runs
+`.github/workflows/deploy.yml`, which does the same and deploys to GitHub Pages.
 It can also be run by hand from the Actions tab.
 
 ### License

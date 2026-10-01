@@ -5,7 +5,8 @@
   import { FRAME_TYPES, MODIFIERS, areaNameError } from '../lib/model.js'
   import { store, themes } from '../lib/store.svelte.js'
 
-  const frame = $derived(store.selected)
+  // Only mounted while a frame is selected.
+  const frame = $derived(/** @type {import('../lib/model.js').Frame} */ (store.selected))
 
   // svelte-ignore state_referenced_locally
   let areaDraft = $state(frame.area)

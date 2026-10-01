@@ -15,7 +15,11 @@
 
   let canvas = $state()
   let guides = $state()
-  /** Measured grid, in px relative to the canvas. */
+  /** @typedef {{ start: number, end: number }} Span */
+  /**
+   * Measured grid, in px relative to the canvas.
+   * @type {{ cols: Span[], rows: Span[], gapX: number, gapY: number, fontSize: number, contentW: number, contentH: number }}
+   */
   let m = $state({ cols: [], rows: [], gapX: 0, gapY: 0, fontSize: 16, contentW: 0, contentH: 0 })
   /** Current pointer gesture, if any. */
   let drag = null

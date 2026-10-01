@@ -5,6 +5,53 @@
 // version number, which the user bumps and which goes into download filenames.
 export const MODEL_VERSION = 1
 
+// ---------- types ----------
+// The model's shape, as JSDoc so the editor and `npm run check` know it. Everything else
+// in the app imports these: `@type {import('./model.js').Design}`.
+
+/** @typedef {'frame' | 'std' | 'partial' | 'bracket'} FrameType */
+/** @typedef {'sidebar' | 'statusline' | 'mirror' | 'flip' | 'alert'} Modifier */
+/** @typedef {'columns' | 'rows'} Axis */
+/**
+ * A cell rectangle: zero-based column `x` and row `y`, size `w` x `h` in cells.
+ * @typedef {{ x: number, y: number, w: number, h: number }} Rect
+ */
+/** @typedef {{ x: number, y: number }} Cell */
+/** @typedef {{ text: string, code: string }} SidebarItem */
+/**
+ * @typedef {object} Frame
+ * @property {string} id      editor-only identity, stable across renames
+ * @property {string} area    grid-area name, also the exported element id
+ * @property {Rect} rect
+ * @property {FrameType} type
+ * @property {Modifier[]} modifiers
+ * @property {string} theme   theme name, or '' for the page theme
+ * @property {string} title
+ * @property {string[]} label one entry per line
+ * @property {SidebarItem[]} items
+ * @property {string} status
+ */
+/**
+ * Track sizes, e.g. `['14rem', '1fr']`.
+ * @typedef {{ columns: string[], rows: string[] }} Grid
+ */
+/**
+ * @typedef {object} Page
+ * @property {string} title
+ * @property {number} version  the design's own version, bumped by the user
+ * @property {string} theme
+ * @property {boolean} alert
+ * @property {Record<string, string>} tokens  `--pk-*` custom properties for `:root`
+ */
+/**
+ * @typedef {object} Design
+ * @property {number} version  file format version (MODEL_VERSION)
+ * @property {Grid} grid
+ * @property {Page} page
+ * @property {Frame[]} frames
+ */
+
+/** @type {{ value: FrameType, label: string, className: string | null }[]} */
 export const FRAME_TYPES = [
   { value: 'frame', label: 'Box', className: null },
   { value: 'std', label: 'Standard', className: 'pk-std' },
@@ -12,6 +59,7 @@ export const FRAME_TYPES = [
   { value: 'bracket', label: 'Bracket', className: 'pk-bracket' },
 ]
 
+/** @type {{ value: Modifier, label: string }[]} */
 export const MODIFIERS = [
   { value: 'sidebar', label: 'Sidebar' },
   { value: 'statusline', label: 'Statusline' },
@@ -43,7 +91,13 @@ export function newId() {
   return globalThis.crypto?.randomUUID?.() ?? `f${Date.now().toString(36)}${idCounter++}`
 }
 
-/** Area names double as `grid-area` idents and HTML ids, so keep them simple. */
+/**
+ * Area names double as `grid-area` idents and HTML ids, so keep them simple.
+ * @param {string} name
+ * @param {Design} design
+ * @param {string} selfId  the frame being renamed
+ * @returns {string | null}
+ */
 export function areaNameError(name, design, selfId) {
   if (!name) return 'Required.'
   if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(name)) return 'Letters, digits, - and _; start with a letter.'
@@ -52,6 +106,9 @@ export function areaNameError(name, design, selfId) {
   return null
 }
 
+/**
+ * @param {Pick<Design, 'frames'>} design
+ */
 export function nextAreaName(design) {
   const used = new Set(design.frames.map((f) => f.area))
   for (let i = 1; ; i++) if (!used.has(`frame-${i}`)) return `frame-${i}`
@@ -88,7 +145,8 @@ export function splitTracks(template) {
 export function isValidTrack(value) {
   const v = String(value).trim()
   if (!v || splitTracks(v).length !== 1 || /repeat\(|\[/i.test(v)) return false
-  if (globalThis.CSS?.supports) return CSS.supports('grid-template-columns', v)
+  // `CSS` is missing in Node (the tests); fall back to a pattern there.
+  if (typeof CSS !== 'undefined') return CSS.supports('grid-template-columns', v)
   return SIMPLE_TRACK.test(v) || /^(auto|min-content|max-content)$/.test(v) || /^(minmax|fit-content)\(.+\)$/.test(v)
 }
 
@@ -97,38 +155,66 @@ export function isValidLength(value) {
   const v = String(value).trim()
   if (!v) return true
   if (/[;{}]/.test(v)) return false
-  if (globalThis.CSS?.supports) return CSS.supports('width', v)
+  if (typeof CSS !== 'undefined') return CSS.supports('width', v)
   return /^-?(\d*\.?\d+)(px|rem|em|%|vw|vh)$|^0$/.test(v)
 }
 
 // ---------- geometry ----------
 
+/**
+ * @param {Rect} a
+ * @param {Rect} b
+ */
 export function rectsOverlap(a, b) {
   return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
 }
 
+/**
+ * @param {Grid} grid
+ * @param {Rect} r
+ */
 export function rectInGrid(grid, r) {
   return r.w >= 1 && r.h >= 1 && r.x >= 0 && r.y >= 0 &&
     r.x + r.w <= grid.columns.length && r.y + r.h <= grid.rows.length
 }
 
-/** Can `rect` be placed without leaving the grid or overlapping another frame? */
+/**
+ * Can `rect` be placed without leaving the grid or overlapping another frame?
+ * @param {Design} design
+ * @param {Rect} rect
+ * @param {string | null} [ignoreId]
+ */
 export function rectFits(design, rect, ignoreId = null) {
   return rectInGrid(design.grid, rect) &&
     !design.frames.some((f) => f.id !== ignoreId && rectsOverlap(f.rect, rect))
 }
 
-/** The rectangle spanned by two cells, in either order. */
+/**
+ * The rectangle spanned by two cells, in either order.
+ * @param {Cell} a
+ * @param {Cell} b
+ * @returns {Rect}
+ */
 export function rectFromCells(a, b) {
   const x = Math.min(a.x, b.x)
   const y = Math.min(a.y, b.y)
   return { x, y, w: Math.abs(a.x - b.x) + 1, h: Math.abs(a.y - b.y) + 1 }
 }
 
+/**
+ * @param {Design} design
+ * @param {number} x
+ * @param {number} y
+ * @returns {Frame | null}
+ */
 export function frameAtCell(design, x, y) {
   return design.frames.find((f) => rectsOverlap(f.rect, { x, y, w: 1, h: 1 })) ?? null
 }
 
+/**
+ * @param {Design} design
+ * @returns {Cell | null}
+ */
 export function firstEmptyCell(design) {
   for (let y = 0; y < design.grid.rows.length; y++)
     for (let x = 0; x < design.grid.columns.length; x++)
@@ -136,7 +222,13 @@ export function firstEmptyCell(design) {
   return null
 }
 
-/** Insert a track before `index` on axis 'columns' or 'rows'. Frames spanning the insertion point grow. */
+/**
+ * Insert a track before `index` on axis 'columns' or 'rows'. Frames spanning the insertion point grow.
+ * @param {Design} design
+ * @param {Axis} axis
+ * @param {number} index
+ * @param {string} [size]
+ */
 export function insertTrack(design, axis, index, size = '1fr') {
   const [pos, len] = axis === 'columns' ? ['x', 'w'] : ['y', 'h']
   design.grid[axis].splice(index, 0, size)
@@ -146,7 +238,12 @@ export function insertTrack(design, axis, index, size = '1fr') {
   }
 }
 
-/** Remove the track at `index`. Frames entirely inside it are deleted; spanning frames shrink. */
+/**
+ * Remove the track at `index`. Frames entirely inside it are deleted; spanning frames shrink.
+ * @param {Design} design
+ * @param {Axis} axis
+ * @param {number} index
+ */
 export function removeTrack(design, axis, index) {
   if (design.grid[axis].length <= 1) return
   const [pos, len] = axis === 'columns' ? ['x', 'w'] : ['y', 'h']
@@ -158,7 +255,12 @@ export function removeTrack(design, axis, index) {
   }
 }
 
-/** Replace a whole axis from a template string; extra tracks are added or removed at the end. */
+/**
+ * Replace a whole axis from a template string; extra tracks are added or removed at the end.
+ * @param {Design} design
+ * @param {Axis} axis
+ * @param {string[]} sizes
+ */
 export function setTracks(design, axis, sizes) {
   while (design.grid[axis].length > sizes.length) removeTrack(design, axis, design.grid[axis].length - 1)
   sizes.forEach((s, i) => {
@@ -167,7 +269,10 @@ export function setTracks(design, axis, sizes) {
   })
 }
 
-/** Download filename without extension: slugged page title plus version, e.g. `bridge-v3`. */
+/**
+ * Download filename without extension: slugged page title plus version, e.g. `bridge-v3`.
+ * @param {Design} design
+ */
 export function fileBaseName(design) {
   const title = design.page.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'design'
   return `${title}-v${design.page.version}`
@@ -175,6 +280,11 @@ export function fileBaseName(design) {
 
 // ---------- construction and loading ----------
 
+/**
+ * @param {Pick<Design, 'frames'>} design
+ * @param {Rect} rect
+ * @returns {Frame}
+ */
 export function newFrame(design, rect) {
   return {
     id: newId(),
@@ -190,6 +300,9 @@ export function newFrame(design, rect) {
   }
 }
 
+/**
+ * @returns {Design}
+ */
 export function starterDesign() {
   const frame = (area, rect, rest) => ({ ...newFrame({ frames: [] }, rect), area, ...rest })
   return {
@@ -220,6 +333,7 @@ export function starterDesign() {
   }
 }
 
+/** @type {(v: unknown, fallback?: string) => string} */
 const str = (v, fallback = '') => (typeof v === 'string' ? v : fallback)
 const int = (v) => (Number.isInteger(v) ? v : NaN)
 
@@ -227,6 +341,9 @@ const int = (v) => (Number.isInteger(v) ? v : NaN)
  * Turn untrusted JSON (a loaded file, localStorage) into a valid design.
  * Bad tracks become `1fr`; frames that are invalid, out of the grid or overlap an
  * earlier frame are dropped. Throws if it isn't a design at all.
+ * @param {any} raw
+ * @param {string[] | null} [knownThemes]  theme names to accept; null accepts any
+ * @returns {Design}
  */
 export function normalizeDesign(raw, knownThemes = null) {
   if (!raw || typeof raw !== 'object' || !raw.grid || !Array.isArray(raw.frames)) {
@@ -238,10 +355,12 @@ export function normalizeDesign(raw, knownThemes = null) {
     return out.length ? out : ['1fr']
   }
   const page = raw.page ?? {}
+  /** @type {Record<string, string>} */
   const tokens = {}
   for (const [k, v] of Object.entries(page.tokens ?? {})) {
     if (/^--pk-[a-z-]+$/.test(k) && typeof v === 'string' && isValidLength(v)) tokens[k] = v.trim()
   }
+  /** @type {Design} */
   const design = {
     version: MODEL_VERSION,
     grid: { columns: tracks(raw.grid.columns), rows: tracks(raw.grid.rows) },

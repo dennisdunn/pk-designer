@@ -18,7 +18,7 @@
     const gap = spans.length > 1 ? spans[1].start - spans[0].end : 24
     return [
       ...spans.map((s, i) => ({ index: i, at: i === 0 ? s.start - gap / 2 : (spans[i - 1].end + s.start) / 2 })),
-      { index: spans.length, at: spans.at(-1).end + gap / 2 },
+      { index: spans.length, at: spans[spans.length - 1].end + gap / 2 },
     ]
   })
 
