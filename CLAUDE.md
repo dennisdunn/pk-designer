@@ -110,6 +110,9 @@ exact version for now); whether to inline the CSS as an export option.
   runs in a build: `npm run build`, then the `preview` launch config (`vite preview` on port 4173); unregister
   it afterwards, or it keeps serving this app on that port. CI (`ci.yml`) runs check, test and build on every push. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
   on `v*` tags (`npm version ...`) or a manual run.
+- `.github/dependabot.yml`: weekly update pull requests. Each runtime dependency (Protokuda above all) gets
+  its own; dev tooling and GitHub Actions are grouped. TypeScript majors are held back until svelte-check
+  supports them (its peer dependency is `^5 || ^6`).
 - `vite.config.js`: the `virtual:protokuda` module (`version`, `palette`, `themes`, `themeNames`,
   `defaultTheme`; types in `src/virtual.d.ts`). It imports `src/shared/theme/`, so those modules must stay
   free of browser-only code.

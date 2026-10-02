@@ -1,0 +1,25 @@
+# Weekly update pull requests; CI (check, test, build) runs on each.
+#
+# Protokuda arrives this way: library changes reach the studio only as package updates, so each
+# runtime dependency gets its own pull request. Dev tooling is grouped into one.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-tooling:
+        dependency-type: development
+    ignore:
+      # svelte-check supports TypeScript 5 and 6 only (its peer dependency); take 7 when it does.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
