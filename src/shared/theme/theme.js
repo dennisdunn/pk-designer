@@ -42,6 +42,18 @@ export const nameFor = (/** @type {string} */ label) =>
 export const fileBaseName = (theme) => `${theme.name}-v${theme.version}`
 
 /**
+ * The package's default theme: the one whose tokens all equal protokuda.css's `:root` values,
+ * which is what a page gets with no theme class. Null if none does.
+ * @param {Record<string, string>} rootTokens  from `rootDeclarations`
+ * @param {Record<string, Theme>} themes
+ * @returns {string | null}
+ */
+export function defaultThemeOf(rootTokens, themes) {
+  const matches = (/** @type {Theme} */ t) => Object.entries(t.tokens).every(([k, v]) => rootTokens[k] === v)
+  return Object.values(themes).find(matches)?.name ?? null
+}
+
+/**
  * A copy of a built-in theme under a new name, as a starting point.
  * @param {Theme} from
  * @returns {Theme}

@@ -3,7 +3,7 @@
 
 import template from './readme.md?raw'
 
-/** @typedef {import('./theme.js').Theme} Theme */
+/** @typedef {import('../../shared/theme/theme.js').Theme} Theme */
 
 /** jsDelivr URL for a Protokuda file at exactly `version`. */
 export const cdnUrl = (/** @type {string} */ version, /** @type {string} */ file) =>

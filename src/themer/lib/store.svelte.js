@@ -4,19 +4,19 @@
 import { strToU8, zipSync } from 'fflate'
 import { untrack } from 'svelte'
 // `version` is the Protokuda package's; `pkVersion` keeps it apart from a theme's own version.
-import { palette, themes, version as pkVersion } from 'virtual:protokuda'
+import { defaultTheme, palette, themes, version as pkVersion } from 'virtual:protokuda'
 import { contrastChecks } from './color.js'
-import { parseTheme, sourceCss, themeCss } from './css.js'
+import { parseTheme, sourceCss, themeCss } from '../../shared/theme/css.js'
 import { download } from '../../shared/files.js'
 import { History } from '../../shared/history.svelte.js'
 import { readme } from './readme.js'
-import { completeTheme, fileBaseName, isValidName, startFrom } from './theme.js'
+import { completeTheme, fileBaseName, isValidName, startFrom } from '../../shared/theme/theme.js'
 
-/** @typedef {import('./theme.js').Theme} Theme */
+/** @typedef {import('../../shared/theme/theme.js').Theme} Theme */
 
 const STORAGE_KEY = 'pk-themer:theme'
-/** The library's default; fills in tokens a loaded file leaves out. */
-const BASE = themes.greysmoke?.tokens ?? Object.values(themes)[0].tokens
+/** The package's default theme's tokens; fill in tokens a loaded file leaves out. */
+const BASE = themes[defaultTheme].tokens
 
 /** The first theme a new visitor sees. */
 const FIRST = themes.goldentanoi ?? Object.values(themes)[0]

@@ -2,10 +2,10 @@
   // One token: a palette color, another token, or a custom hex color.
   import { resolve, wouldCycle } from '../lib/color.js'
   import { palette, store } from '../lib/store.svelte.js'
-  import { titleCase } from '../lib/theme.js'
-  import { TOKENS, bare, isHex, valueKind } from '../lib/tokens.js'
+  import { titleCase } from '../../shared/theme/theme.js'
+  import { TOKENS, bare, isHex, valueKind } from '../../shared/theme/tokens.js'
 
-  /** @type {{ token: import('../lib/tokens.js').TokenDef }} */
+  /** @type {{ token: import('../../shared/theme/tokens.js').TokenDef }} */
   let { token } = $props()
 
   // The select's option values: a palette or token reference is its own CSS value;

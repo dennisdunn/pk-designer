@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { contrast, contrastChecks, resolve, wouldCycle } from './color.js'
-import { parseTheme } from './css.js'
-import { pkg, palette } from './fixtures.js'
+import { parseTheme } from '../../shared/theme/css.js'
+import { pkg, palette } from '../../shared/theme/fixtures.js'
 
 describe('resolve', () => {
   const theme = {

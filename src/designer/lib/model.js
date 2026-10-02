@@ -6,6 +6,8 @@
 // Plain fields (titles, themes, tokens) are edited directly. The store only adds
 // editor state on top: selection, history, files.
 
+import { defaultTheme } from 'virtual:protokuda'
+
 // The file format's version. Not to be confused with `page.version`, the design's own
 // version number, which the user bumps and which goes into download filenames.
 export const MODEL_VERSION = 1
@@ -83,7 +85,8 @@ export const PAGE_TOKENS = [
   { name: '--pk-statusline-height', label: 'Statusline height', placeholder: '2rem' },
 ]
 
-export const DEFAULT_THEME = 'greysmoke'
+/** A new design's page theme: the package's default, read from protokuda.css at build time. */
+export const DEFAULT_THEME = defaultTheme
 
 const RESERVED_AREAS = new Set([
   'auto', 'span', 'none', 'default', 'inherit', 'initial', 'unset', 'revert', 'revert-layer',

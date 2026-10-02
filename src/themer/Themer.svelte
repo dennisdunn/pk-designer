@@ -8,8 +8,8 @@
   import ThemePanel from './components/ThemePanel.svelte'
   import TokenRow from './components/TokenRow.svelte'
   import { store } from './lib/store.svelte.js'
-  import { fileBaseName } from './lib/theme.js'
-  import { GROUPS } from './lib/tokens.js'
+  import { fileBaseName } from '../shared/theme/theme.js'
+  import { GROUPS } from '../shared/theme/tokens.js'
 
   let fileInput
   let message = $state('')

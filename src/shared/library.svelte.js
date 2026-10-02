@@ -2,14 +2,14 @@
 // offers them beside the built-in ones. Kept in localStorage under its own key, and
 // re-read when another window changes it.
 
-import { palette, themeNames, themes as builtIns } from 'virtual:protokuda'
-import { cleanTheme, readThemes, sameTheme } from '../themer/lib/library.js'
+import { defaultTheme, palette, themeNames, themes as builtIns } from 'virtual:protokuda'
+import { cleanTheme, readThemes, sameTheme } from './theme/library.js'
 
-/** @typedef {import('../themer/lib/theme.js').Theme} Theme */
+/** @typedef {import('./theme/theme.js').Theme} Theme */
 
 const STORAGE_KEY = 'pk-studio:themes'
-/** The library's default theme; fills in tokens a saved theme lacks. */
-const BASE = builtIns.greysmoke?.tokens ?? Object.values(builtIns)[0].tokens
+/** The package's default theme's tokens; fill in tokens a saved theme lacks. */
+const BASE = builtIns[defaultTheme].tokens
 const PKG = { base: BASE, palette, builtIn: themeNames }
 
 /** @returns {Record<string, Theme>} */

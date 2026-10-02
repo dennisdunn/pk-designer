@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classCss, classRule, parseTheme, sourceCss, themeCss } from './css.js'
+import { classCss, classRule, parseTheme, rootDeclarations, sourceCss, themeCss } from './css.js'
 import { pkg, palette } from './fixtures.js'
 import { TOKENS } from './tokens.js'
 
@@ -8,6 +8,18 @@ describe('palette', () => {
     expect(palette['golden-tanoi']).toBe('#fc6')
     expect(palette.black).toBe('#000')
     expect(Object.keys(palette).some((c) => TOKENS.some((t) => t.name === `--pk-${c}`))).toBe(false)
+  })
+})
+
+describe('root declarations', () => {
+  it("reads protokuda.css's :root values, not a theme class's", () => {
+    const root = rootDeclarations(pkg('protokuda.css'))
+    expect(root['--pk-primary']).toBe(parseTheme(pkg('themes/greysmoke.css')).tokens['--pk-primary'])
+    expect(root['--pk-primary']).not.toBe(parseTheme(pkg('themes/lilac.css')).tokens['--pk-primary'])
+  })
+
+  it('reads nothing from CSS without a :root rule', () => {
+    expect(rootDeclarations('.pk-theme-x { --pk-primary: #fff; }')).toEqual({})
   })
 })
 

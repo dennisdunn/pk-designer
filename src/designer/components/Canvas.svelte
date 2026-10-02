@@ -5,7 +5,7 @@
   // real protokuda.css. Over it sits a "guides" layer positioned from the measured grid:
   // empty-cell outlines, frame hit boxes with resize handles, and track separators.
   import { EDGES, drawRect, moveRect, nudgeRect, resizeRect, trackAt } from '../lib/gestures.js'
-  import { classRule } from '../../themer/lib/css.js'
+  import { classRule } from '../../shared/theme/css.js'
   import { layoutCss, screenMarkup } from '../lib/markup.js'
   import { deleteFrame, frameAtCell, placeFrame, splitTracks } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'

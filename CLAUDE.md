@@ -24,9 +24,11 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
 - **One app, not a monorepo.** One Vite build; the tools are views (`#/designer`, `#/themer`). Each keeps
   its own module-level store, so switching views never loses work.
 - **Nothing hard-coded from the package**: `virtual:protokuda` (vite.config.js) gives the version, the
-  palette (parsed from `dist/protokuda.css`), the built-in themes (from `dist/themes/`) and their names.
-  The themer's token schema in `src/themer/lib/tokens.js` is the exception; a test checks it against the
-  default theme's tokens.
+  palette (parsed from `dist/protokuda.css`), the built-in themes (from `dist/themes/`), their names and
+  the default theme (the one protokuda.css's `:root` matches; the build fails if none does). The token
+  schema in `src/shared/theme/tokens.js` is the exception; a test checks it against the default theme's tokens.
+- **Imports go one way.** The two tools never import each other; both import `src/shared/`. Theme code
+  either tool needs (the model, token schema, theme CSS, library helpers) lives in `src/shared/theme/`.
 - **WYSIWYG.** Previews render with the real `protokuda.css` from the installed package.
 - **Exports are zips** (`fflate`) named `<name>-v<version>.zip`, with Protokuda links pinned to the
   **exact installed version**, so an export looks exactly like the preview. Exported HTML also links the
@@ -108,8 +110,9 @@ exact version for now); whether to inline the CSS as an export option.
   runs in a build: `npm run build`, then the `preview` launch config (`vite preview` on port 4173); unregister
   it afterwards, or it keeps serving this app on that port. CI (`ci.yml`) runs check, test and build on every push. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
   on `v*` tags (`npm version ...`) or a manual run.
-- `vite.config.js`: the `virtual:protokuda` module (`version`, `palette`, `themes`, `themeNames`; types in
-  `src/virtual.d.ts`).
+- `vite.config.js`: the `virtual:protokuda` module (`version`, `palette`, `themes`, `themeNames`,
+  `defaultTheme`; types in `src/virtual.d.ts`). It imports `src/shared/theme/`, so those modules must stay
+  free of browser-only code.
 - `src/main.js`, `src/App.svelte`: mount the shell, which shows one tool by the URL hash.
 - `src/app.css`: the UI shared by both tools (toolbar, buttons, inspector, fields). `src/designer/designer.css`
   and `src/themer/themer.css` hold each tool's own rules. All three load globally, so a rule that a class
@@ -119,10 +122,19 @@ exact version for now); whether to inline the CSS as an export option.
   - `Toolbar.svelte`: the studio header, the tool tabs, the status message and the update notice; each
     tool fills in its buttons;
   - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step;
-  - `library.svelte.js`: the theme library's state (its pure helpers are `src/themer/lib/library.js`);
+  - `library.svelte.js`: the theme library's state (its pure helpers are `theme/library.js`);
   - `pwa.svelte.js`: service worker registration, the update/offline notice state, persistent storage;
   - `files.js`: `pickFile`, `saveFile` (in place where possible) and `download`;
-  - `launch.svelte.js`: files opened with the installed app, waiting for the view that opens them.
+  - `launch.svelte.js`: files opened with the installed app, waiting for the view that opens them;
+  - `theme/`, the theme model both tools use, with its tests:
+    - `tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`, `valueKind()`
+      says whether a value is unset, custom hex, a palette color, a token reference or other;
+    - `theme.js`: the `Theme` type and model operations: naming, `startFrom`, `completeTheme`,
+      `defaultThemeOf`;
+    - `css.js`: reading theme CSS (`parseTheme`, `paletteFrom`, `rootDeclarations`) and writing it
+      (`themeCss`, `sourceCss`, and for the designer `classCss` and `classRule`);
+    - `library.js`: the library's pure helpers: `cleanTheme`, `readThemes`, `sameTheme`;
+    - `fixtures.js`: tests only; reads the installed package's built files.
 - `public/`: favicon and app icons. `icons/`: the maskable icon's source and `render.sh`.
 
 **Designer** (`src/designer/`):
@@ -144,17 +156,10 @@ exact version for now); whether to inline the CSS as an export option.
 
 **Themer** (`src/themer/`):
 - `Themer.svelte`: the tool's toolbar buttons, shortcuts and layout.
-- `lib/tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`,
-  `valueKind()` says whether a value is unset, custom hex, a palette color, a token reference or other.
-- `lib/theme.js`: the `Theme` type and model operations: naming, `startFrom`, `completeTheme`.
-- `lib/css.js`: reading theme CSS (`parseTheme`, `paletteFrom`) and writing it (`themeCss`, `sourceCss`,
-  and for the designer `classCss` and `classRule`).
-- `lib/library.js`: the library's pure helpers: `cleanTheme`, `readThemes`, `sameTheme`.
 - `lib/color.js`: resolving values to colors, cycle detection, contrast and `contrastChecks`.
 - `lib/readme.js` + `readme.md`: the export README; edit the Markdown, `{{key}}` placeholders are filled
   in by `readme()`, which throws on a placeholder it has no value for.
 - `lib/store.svelte.js`: the theme `$state`, derived contrast `checks`, preview options, autosave, open/export.
-- `lib/fixtures.js`: tests only; reads the installed package's built files.
 - `components/`: `Preview`, `ThemePanel` (label, name, version, start from), `LibraryPanel` (save,
   edit, delete), `PreviewPanel` (preview-only options), `TokenRow`, `ContrastPanel`.
 

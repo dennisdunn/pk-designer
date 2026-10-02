@@ -107,8 +107,9 @@ Svelte 5 and Vite, with `vite-plugin-pwa` for the service worker and manifest. T
 package at build time, so updating it is just `npm install protokuda@latest`; the previews and the exports'
 CDN links follow.
 
-- `src/App.svelte` and `src/shared/`: the shell, the tool tabs, the toolbar and undo history.
-- `src/designer/` and `src/themer/`: each tool. Their `lib/` folders hold the parts with no DOM (models,
+- `src/App.svelte` and `src/shared/`: the shell, the tool tabs, the toolbar, undo history, files, and in
+  `src/shared/theme/` the theme model both tools use.
+- `src/designer/` and `src/themer/`: each tool; neither imports the other. Their `lib/` folders hold the parts with no DOM (models,
   validation, export, color and contrast), and these have the tests; `components/` holds the UI.
 - `CLAUDE.md`: the design decisions and a Protokuda class/token reference.
 

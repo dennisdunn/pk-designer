@@ -1,7 +1,7 @@
 <script>
   // The theme library: save the open theme for the designer to use, or edit or delete a saved one.
   import { library } from '../../shared/library.svelte.js'
-  import { sameTheme } from '../lib/library.js'
+  import { sameTheme } from '../../shared/theme/library.js'
   import { store } from '../lib/store.svelte.js'
 
   const theme = $derived(store.theme)

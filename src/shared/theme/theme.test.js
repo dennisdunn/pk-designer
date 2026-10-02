@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { parseTheme } from './css.js'
+import { parseTheme, rootDeclarations } from './css.js'
 import { pkg, palette } from './fixtures.js'
-import { completeTheme, fileBaseName, labelFor, nameFor, startFrom } from './theme.js'
+import { completeTheme, defaultThemeOf, fileBaseName, labelFor, nameFor, startFrom } from './theme.js'
 
 describe('names', () => {
   it('labels themes named after palette colors', () => {
@@ -13,6 +13,20 @@ describe('names', () => {
   })
   it('names the export after the theme and version', () => {
     expect(fileBaseName({ name: 'ember', label: 'Ember', version: 3, tokens: {} })).toBe('ember-v3')
+  })
+})
+
+describe('default theme', () => {
+  const themes = Object.fromEntries(
+    ['atomic', 'greysmoke', 'lilac'].map((name) => [name, { ...parseTheme(pkg(`themes/${name}.css`), name), name }]),
+  )
+
+  it("is the theme protokuda.css's :root matches", () => {
+    expect(defaultThemeOf(rootDeclarations(pkg('protokuda.css')), themes)).toBe('greysmoke')
+  })
+
+  it('is null when no theme matches', () => {
+    expect(defaultThemeOf({ '--pk-primary': '#123456' }, themes)).toBeNull()
   })
 })
 

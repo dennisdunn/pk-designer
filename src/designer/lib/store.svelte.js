@@ -7,7 +7,7 @@ import { themeNames, version } from 'virtual:protokuda'
 import { download, saveFile } from '../../shared/files.js'
 import { History } from '../../shared/history.svelte.js'
 import { library } from '../../shared/library.svelte.js'
-import { classCss } from '../../themer/lib/css.js'
+import { classCss } from '../../shared/theme/css.js'
 import { indexHtml, layoutCss } from './markup.js'
 import {
   fileBaseName, firstEmptyCell, newFrame, normalizeDesign, rectFits, starterDesign, usedThemes,

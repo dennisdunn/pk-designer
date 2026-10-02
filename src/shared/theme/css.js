@@ -20,6 +20,17 @@ export function declarations(css) {
 }
 
 /**
+ * The `--pk-*` declarations of the first `:root {}` rule in a built protokuda.css: the values a
+ * page gets with no theme class.
+ * @param {string} css
+ * @returns {Record<string, string>}
+ */
+export function rootDeclarations(css) {
+  const block = /:root\s*\{([^}]*)\}/.exec(css.replace(/\/\*[\s\S]*?\*\//g, ''))?.[1]
+  return block ? declarations(`${block};`) : {}
+}
+
+/**
  * The palette from a built protokuda.css: every `--pk-<color>: #hex` that isn't a theme token.
  * @param {string} css
  * @returns {Record<string, string>} color name (without `--pk-`) → hex

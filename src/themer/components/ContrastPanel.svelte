@@ -1,7 +1,7 @@
 <script>
   // WCAG AA checks over the pairs of tokens that sit on each other.
   import { store } from '../lib/store.svelte.js'
-  import { bare } from '../lib/tokens.js'
+  import { bare } from '../../shared/theme/tokens.js'
 
   const checks = $derived(store.checks)
 </script>

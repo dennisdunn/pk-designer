@@ -1,8 +1,8 @@
 // Resolving token values to colors, and the WCAG contrast checks.
 
-import { bare, isHex, isToken, tokenDef, varName } from './tokens.js'
+import { bare, isHex, isToken, tokenDef, varName } from '../../shared/theme/tokens.js'
 
-/** @typedef {import('./theme.js').Theme} Theme */
+/** @typedef {import('../../shared/theme/theme.js').Theme} Theme */
 
 /**
  * Resolve a token to a hex color, following palette and token references.
