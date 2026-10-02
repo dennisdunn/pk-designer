@@ -1,11 +1,14 @@
 name: CI
 
-# Every push and pull request: type-check, test and build, so a broken main shows up
+# Every push, to any branch: type-check, test and build, so a broken main shows up
 # before release rather than at it. Deploys happen in deploy.yml, on version tags.
+#
+# Pull requests here come from branches in this repo (Dependabot's included), and a pull
+# request shows the push run on its head commit, so a pull_request trigger would only run
+# everything twice. Add it back if pull requests from forks ever need checking.
 on:
   push:
     branches: ['**']
-  pull_request:
 
 permissions:
   contents: read
