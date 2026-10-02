@@ -68,6 +68,10 @@ const pwa = VitePWA({
       { name: 'Designer', short_name: 'Designer', url: './#/designer' },
       { name: 'Themer', short_name: 'Themer', url: './#/themer' },
     ],
+    // "Open with" for designs and theme files (Chromium on desktop); src/shared/launch.svelte.js
+    // routes them. One window: a file opens in the running app.
+    file_handlers: [{ action: './', accept: { 'application/json': ['.json'], 'text/css': ['.css'] } }],
+    launch_handler: { client_mode: 'focus-existing' },
   },
   // Everything the app needs offline, the self-hosted font included, is in the build.
   workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'] },

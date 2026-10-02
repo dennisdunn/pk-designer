@@ -45,6 +45,13 @@ This repo was pk-designer; pk-themer was merged in with its history (its commits
 - **Icons:** the mark is Protokuda's elbow (rounded outside, square inside) with a 2x2 grid of palette
   colors. `public/favicon.svg` is the source; `npm run icons` renders the PNGs (needs `rsvg-convert`), which
   are committed so CI doesn't need it.
+- **Files:** where the browser has File System Access (Chromium on desktop), Open keeps a handle and the
+  designer's Save writes back to the same file while its name (`<title>-v<version>.json`) still matches; a
+  new title or version asks where to save. Elsewhere (Safari, Firefox, iPad) Open uses a file input and
+  Save downloads. Installed, "Open with" takes `.json` designs and `.css` themes (`file_handlers`).
+- **Touch and tablets:** the canvas takes every touch for drawing (`touch-action: none`), so it must never
+  need scrolling sideways: below 52rem the designer stacks the inspector under a full-width canvas. On
+  coarse pointers, handles and track lines get ~44px hit areas; with no hover, the lines stay visible.
 - **Tooling:** Vite + Svelte 5 (runes). Vitest for the pure modules.
 
 ### Designer
@@ -87,9 +94,9 @@ This repo was pk-designer; pk-themer was merged in with its history (its commits
 ## Plan
 
 Merging into Protokuda Studio, in steps. Done: 1 import pk-themer's history; 2–4 one app with a shell,
-one `virtual:protokuda`, shared history and UI CSS; 5 the theme library; 6 the PWA. Next:
+one `virtual:protokuda`, shared history and UI CSS; 5 the theme library; 6 the PWA; 7 tablets and files.
+Next:
 
-7. **Tablet**: `touch-action` on the canvas, 44px handles, File System Access save-in-place where available.
 8. **Deploy**: rename the repo to `pk-studio`; Pages URLs don't follow a rename, so leave redirect pages
    for `/pk-designer/` and `/pk-themer/`; archive pk-themer.
 
@@ -118,7 +125,9 @@ exact version for now); whether to inline the CSS as an export option.
     tool fills in its buttons;
   - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step;
   - `library.svelte.js`: the theme library's state (its pure helpers are `src/themer/lib/library.js`);
-  - `pwa.svelte.js`: service worker registration, the update/offline notice state, persistent storage.
+  - `pwa.svelte.js`: service worker registration, the update/offline notice state, persistent storage;
+  - `files.js`: `pickFile`, `saveFile` (in place where possible) and `download`;
+  - `launch.svelte.js`: files opened with the installed app, waiting for the view that opens them.
 - `public/`: favicon and app icons. `icons/`: the maskable icon's source and `render.sh`.
 
 **Designer** (`src/designer/`):

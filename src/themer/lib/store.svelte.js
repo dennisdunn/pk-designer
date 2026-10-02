@@ -7,6 +7,7 @@ import { untrack } from 'svelte'
 import { palette, themes, version as pkVersion } from 'virtual:protokuda'
 import { contrastChecks } from './color.js'
 import { parseTheme, sourceCss, themeCss } from './css.js'
+import { download } from '../../shared/files.js'
 import { History } from '../../shared/history.svelte.js'
 import { readme } from './readme.js'
 import { completeTheme, fileBaseName, isValidName, startFrom } from './theme.js'
@@ -31,15 +32,6 @@ function loadAutosave() {
   } catch {
     return null
   }
-}
-
-function download(filename, data, type) {
-  const url = URL.createObjectURL(new Blob([data], { type }))
-  const a = Object.assign(document.createElement('a'), { href: url, download: filename })
-  document.body.append(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 class Store {

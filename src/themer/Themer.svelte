@@ -1,4 +1,5 @@
 <script>
+  import { launch } from '../shared/launch.svelte.js'
   import Toolbar from '../shared/Toolbar.svelte'
   import ContrastPanel from './components/ContrastPanel.svelte'
   import LibraryPanel from './components/LibraryPanel.svelte'
@@ -33,10 +34,22 @@
     }
   }
 
-  async function open(e) {
+  // A theme file opened with the installed app.
+  $effect(() => {
+    const waiting = launch.theme
+    if (!waiting) return
+    launch.theme = null
+    openFile(waiting.file)
+  })
+
+  function inputChanged(e) {
     const file = e.currentTarget.files?.[0]
     e.currentTarget.value = ''
-    if (!file) return
+    if (file) openFile(file)
+  }
+
+  /** @param {File} file */
+  async function openFile(file) {
     try {
       await store.openCss(file)
       message = `Opened ${file.name}. Undo brings the previous theme back.`
@@ -66,7 +79,7 @@
 <Toolbar {message}>
   <nav aria-label="Theme file">
     <button type="button" data-code="01-0001" title="Open a theme .css file" onclick={() => fileInput.click()}>Open</button>
-    <input bind:this={fileInput} type="file" accept=".css,text/css" hidden onchange={open} />
+    <input bind:this={fileInput} type="file" accept=".css,text/css" hidden onchange={inputChanged} />
   </nav>
   <nav aria-label="Edit">
     <button type="button" data-code="02-0001" aria-keyshortcuts="Control+Z Meta+Z" title="Undo (Ctrl/Cmd+Z)"

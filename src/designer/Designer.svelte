@@ -1,16 +1,26 @@
 <script>
+  import { hasFileAccess, pickFile } from '../shared/files.js'
+  import { launch } from '../shared/launch.svelte.js'
   import Toolbar from '../shared/Toolbar.svelte'
   import Canvas from './components/Canvas.svelte'
   import FramePanel from './components/FramePanel.svelte'
   import PagePanel from './components/PagePanel.svelte'
   import { emptyDesign } from './lib/model.js'
-  import { store } from './lib/store.svelte.js'
+  import { DESIGN_FILE, store } from './lib/store.svelte.js'
 
   let fileInput
   let message = $state('')
 
   $effect(() => {
     store.changed()
+  })
+
+  // A design opened with the installed app.
+  $effect(() => {
+    const waiting = launch.design
+    if (!waiting) return
+    launch.design = null
+    openFile(waiting.file, waiting.handle)
   })
 
   // Undo/redo shortcuts, except in text fields, which keep their own native undo.
@@ -35,12 +45,30 @@
     message = 'New design. Undo brings the previous one back.'
   }
 
-  async function open(e) {
+  // With File System Access, the system picker, so Save can write back to the file; else a file input.
+  async function open() {
+    if (!hasFileAccess) return fileInput.click()
+    try {
+      const picked = await pickFile(DESIGN_FILE)
+      if (picked) await openFile(picked.file, picked.handle)
+    } catch (err) {
+      message = `Couldn't open the file: ${err instanceof Error ? err.message : err}`
+    }
+  }
+
+  function inputChanged(e) {
     const file = e.currentTarget.files?.[0]
     e.currentTarget.value = ''
-    if (!file) return
+    if (file) openFile(file)
+  }
+
+  /**
+   * @param {File} file
+   * @param {import('../shared/files.js').FileHandle | null} [handle]
+   */
+  async function openFile(file, handle = null) {
     try {
-      const { added, differed } = await store.openJson(file)
+      const { added, differed } = await store.openJson(file, handle)
       message = [
         `Opened ${file.name}.`,
         added.length && `Added ${added.join(', ')} to your theme library.`,
@@ -48,6 +76,15 @@
       ].filter(Boolean).join(' ')
     } catch (err) {
       message = `Couldn't open ${file.name}: ${err instanceof Error ? err.message : err}`
+    }
+  }
+
+  async function save() {
+    try {
+      const saved = await store.saveJson()
+      if (saved) message = `Saved ${saved}.`
+    } catch (err) {
+      message = `Couldn't save: ${err instanceof Error ? err.message : err}`
     }
   }
 
@@ -62,9 +99,9 @@
 <Toolbar {message}>
   <nav aria-label="Design">
     <button type="button" data-code="01-0001" onclick={newDesign}>New</button>
-    <button type="button" data-code="01-0002" onclick={() => fileInput.click()}>Open</button>
-    <button type="button" data-code="01-0003" onclick={() => store.saveJson()}>Save</button>
-    <input bind:this={fileInput} type="file" accept=".json,application/json" hidden onchange={open} />
+    <button type="button" data-code="01-0002" onclick={open}>Open</button>
+    <button type="button" data-code="01-0003" onclick={save}>Save</button>
+    <input bind:this={fileInput} type="file" accept=".json,application/json" hidden onchange={inputChanged} />
   </nav>
   <nav aria-label="Edit">
     <button type="button" data-code="02-0002" aria-keyshortcuts="Control+Z Meta+Z" title="Undo (Ctrl/Cmd+Z)"

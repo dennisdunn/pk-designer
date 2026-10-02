@@ -68,3 +68,16 @@ p.hint.panel {
   cursor: pointer;
   margin-bottom: 0.5rem;
 }
+
+/* Portrait tablets: the canvas across the full width (it can't be scrolled sideways by touch,
+   since touches on it draw), the inspector below it, each scrolling on its own. */
+@media (max-width: 52rem) {
+  .workspace.designer {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  }
+  .designer .inspector {
+    border-left: none;
+    border-top: 3px solid var(--ui-muted);
+  }
+}

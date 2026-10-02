@@ -4,6 +4,7 @@
 import { strToU8, zipSync } from 'fflate'
 import { untrack } from 'svelte'
 import { themeNames, version } from 'virtual:protokuda'
+import { download, saveFile } from '../../shared/files.js'
 import { History } from '../../shared/history.svelte.js'
 import { library } from '../../shared/library.svelte.js'
 import { classCss } from '../../themer/lib/css.js'
@@ -29,14 +30,8 @@ function loadAutosave() {
   }
 }
 
-function download(filename, data, type) {
-  const url = URL.createObjectURL(new Blob([data], { type }))
-  const a = Object.assign(document.createElement('a'), { href: url, download: filename })
-  document.body.append(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 0)
-}
+/** For the file pickers. @type {import('../../shared/files.js').FileType} */
+export const DESIGN_FILE = { description: 'Protokuda Studio design', accept: { 'application/json': ['.json'] } }
 
 class Store {
   design = $state(loadAutosave() ?? starterDesign())
@@ -51,6 +46,12 @@ class Store {
   )
 
   history = new History()
+
+  /**
+   * The file the design came from or was last saved to, where the browser lets Save write back.
+   * @type {import('../../shared/files.js').FileHandle | null}
+   */
+  fileHandle = null
 
   /** Call from an effect: reads the whole design, so it runs on every change. */
   changed() {
@@ -88,10 +89,14 @@ class Store {
     this.selectedId = id
   }
 
-  /** @param {Design} design */
-  replace(design) {
+  /**
+   * @param {Design} design
+   * @param {import('../../shared/files.js').FileHandle | null} [handle]  the file it came from
+   */
+  replace(design, handle = null) {
     this.design = design
     this.selectedId = null
+    this.fileHandle = handle
   }
 
   /**
@@ -110,24 +115,33 @@ class Store {
     return frame
   }
 
-  /** The design file carries copies of its custom themes, so it opens anywhere. */
-  saveJson() {
+  /**
+   * Save the design as `<title>-v<version>.json`, carrying copies of its custom themes so it opens
+   * anywhere. Writes back to the open file while the name still matches; a new title or version
+   * asks where to put the new file. Returns the name written, or null if it was downloaded or cancelled.
+   */
+  async saveJson() {
     const themes = Object.fromEntries(this.customThemes.map((t) => [t.name, t]))
     const file = this.customThemes.length ? { ...this.design, themes } : this.design
-    download(`${fileBaseName(this.design)}.json`, JSON.stringify(file, null, 2) + '\n', 'application/json')
+    const name = `${fileBaseName(this.design)}.json`
+    const data = JSON.stringify(file, null, 2) + '\n'
+    const handle = await saveFile({ name, data, type: DESIGN_FILE, handle: this.fileHandle })
+    if (handle) this.fileHandle = handle
+    return handle ? handle.name : null
   }
 
   /**
    * Open a design file. Themes it carries that the library lacks are added to the library;
    * where the library has a theme by the same name, the library's wins.
    * @param {File} file
+   * @param {import('../../shared/files.js').FileHandle | null} [handle]  for saving back to it
    * @returns {Promise<{ added: string[], differed: string[] }>}
    */
-  async openJson(file) {
+  async openJson(file, handle = null) {
     const raw = JSON.parse(await file.text())
     normalizeDesign(raw) // throws if it isn't a design, before the library changes
     const merged = library.merge(raw.themes)
-    this.replace(normalizeDesign(raw, knownThemes()))
+    this.replace(normalizeDesign(raw, knownThemes()), handle)
     return merged
   }
 

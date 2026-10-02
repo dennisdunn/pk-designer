@@ -6,7 +6,9 @@ Two tools in one app; switch between them with the tabs at the top. Each keeps i
 Themes you save to your library in the themer show up in the designer's theme pickers.
 
 **Install it** from the browser (the install icon in the address bar, or Share → Add to Home Screen on
-an iPad) to get it as an app that works offline. When a new version is out, an **Update** button appears in
+an iPad) to get it as an app that works offline. Installed on a computer, it can open designs (`.json`)
+and themes (`.css`) from your file manager with "Open with". On a tablet in portrait, the designer puts its
+inspector under the canvas. When a new version is out, an **Update** button appears in
 the toolbar; your autosaved work carries over.
 
 - [Open the designer](https://dennisdunn.github.io/pk-designer/)
@@ -39,8 +41,10 @@ each frame's empty `pk-content` element after export.
 ### Files
 
 - **New** starts an empty design: one column, one row, no frames.
-- **Save / Open:** the design as `<title>-v<version>.json`. The designer also autosaves to the browser's
-  local storage, so a reload picks up where you left off. A saved design carries copies of the library
+- **Save / Open:** the design as `<title>-v<version>.json`. In Chrome and Edge on a computer, Save writes
+  back to the file you opened until you change the title or version, which saves a new file; other browsers
+  download it. The designer also autosaves to the browser's local storage, so a reload picks up where you
+  left off. A saved design carries copies of the library
   themes it uses; opening it adds any your library doesn't have (where both have a theme by that name,
   yours wins).
 - **Export:** `<title>-v<version>.zip` containing

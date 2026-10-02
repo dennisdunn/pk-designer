@@ -392,6 +392,7 @@
     background: rgb(255 255 255 / 0.06);
   }
   .hit.selected {
+    z-index: 3; /* its handles stick out over the neighbours */
     box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--ui-primary);
   }
   .hit:focus-visible {
@@ -460,13 +461,40 @@
     background: var(--ui-accent);
     opacity: 0;
   }
-  .separator.vertical::after { top: 0; bottom: 0; left: 5px; width: 2px; }
-  .separator.horizontal::after { left: 0; right: 0; top: 5px; height: 2px; }
+  .separator.vertical::after { top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; }
+  .separator.horizontal::after { left: 0; right: 0; top: calc(50% - 1px); height: 2px; }
   .separator:hover::after,
   .separator:focus-visible::after {
     opacity: 1;
   }
   .separator:focus-visible {
     outline: 2px solid var(--ui-accent);
+  }
+
+  /* Touch: a fingertip needs about 44px, and nothing hovers to reveal the lines. */
+  @media (pointer: coarse) {
+    .handle {
+      width: 16px;
+      height: 16px;
+      margin: -8px 0 0 -8px;
+    }
+    .handle::before {
+      content: '';
+      position: absolute;
+      inset: -15px;
+    }
+    .separator.vertical {
+      width: 24px;
+      margin-left: -12px;
+    }
+    .separator.horizontal {
+      height: 24px;
+      margin-top: -12px;
+    }
+  }
+  @media (hover: none) {
+    .separator::after {
+      opacity: 0.5;
+    }
   }
 </style>
