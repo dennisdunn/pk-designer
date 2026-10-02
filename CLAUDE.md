@@ -95,13 +95,6 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
 
 ## Plan
 
-Merging into Protokuda Studio, in steps. Done: 1 import pk-themer's history; 2–4 one app with a shell,
-one `virtual:protokuda`, shared history and UI CSS; 5 the theme library; 6 the PWA; 7 tablets and files.
-Next:
-
-8. **Deploy**: rename the repo to `pk-studio`; Pages URLs don't follow a rename, so leave redirect pages
-   for `/pk-designer/` and `/pk-themer/`; archive pk-themer.
-
 **Later, designer:** responsive layouts (a grid per breakpoint), nested frames, more keyboard shortcuts.
 **Later, themer:** palette editing (new named colors), contrast suggestions (nearest passing palette
 color), a light/dark backdrop toggle in the preview, sharing a theme by URL.
