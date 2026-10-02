@@ -86,6 +86,12 @@ export const PAGE_TOKENS = [
   // Each placeholder is Protokuda's own default, read from protokuda.css at build time.
 ].map((t) => ({ ...t, placeholder: rootTokens[t.name] ?? '' }))
 
+/**
+ * Protokuda's default `--pk-inner-radius`, in rem (read from protokuda.css): where the inspector's
+ * slider sits when a design doesn't set one.
+ */
+export const DEFAULT_INNER_RADIUS = parseFloat(rootTokens['--pk-inner-radius']) || 0
+
 /** A new design's page theme: the package's default, read from protokuda.css at build time. */
 export const DEFAULT_THEME = defaultTheme
 

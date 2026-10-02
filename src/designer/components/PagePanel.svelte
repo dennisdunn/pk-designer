@@ -1,12 +1,17 @@
 <script>
   // Page-level settings: theme, tokens, and the grid tracks as text.
-  import { PAGE_TOKENS, fileBaseName, isValidLength, isValidTrack, setTracks, splitTracks } from '../lib/model.js'
+  import {
+    DEFAULT_INNER_RADIUS, PAGE_TOKENS, fileBaseName, isValidLength, isValidTrack, setTracks, splitTracks,
+  } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
   import ThemeOptions from './ThemeOptions.svelte'
 
   const page = $derived(store.design.page)
   const grid = $derived(store.design.grid)
-  const radius = $derived(parseFloat(page.tokens['--pk-inner-radius'] ?? '0') || 0)
+  const radius = $derived.by(() => {
+    const set = page.tokens['--pk-inner-radius']
+    return set === undefined ? DEFAULT_INNER_RADIUS : parseFloat(set) || 0
+  })
 
   let gridError = $state({ columns: false, rows: false })
 

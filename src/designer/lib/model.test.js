@@ -3,7 +3,7 @@ import { rootDeclarations } from '../../shared/theme/css.js'
 import { pkg } from '../../shared/theme/fixtures.js'
 import {
   areaNameError, deleteFrame, fileBaseName, insertTrack, placeFrame, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
-  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame, usedThemes, PAGE_TOKENS,
+  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame, usedThemes, PAGE_TOKENS, DEFAULT_INNER_RADIUS,
 } from './model.js'
 
 /** @type {(id: string, rect: import('./model.js').Rect) => import('./model.js').Frame} */
@@ -140,6 +140,12 @@ describe('page tokens', () => {
       expect(root[t.name], t.name).toBeTruthy()
       expect(t.placeholder).toBe(root[t.name])
     }
+  })
+
+  it("take the inner radius default from protokuda.css's :root, in rem as the slider is", () => {
+    const value = rootDeclarations(pkg('protokuda.css'))['--pk-inner-radius']
+    expect(value).toMatch(/^\d*\.?\d+rem$/)
+    expect(DEFAULT_INNER_RADIUS).toBe(parseFloat(value))
   })
 })
 
