@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { version } from 'virtual:protokuda'
+  import { pwa, reloadToUpdate } from './pwa.svelte.js'
   import { route } from './route.svelte.js'
 
   /** @type {{ message: string, children: import('svelte').Snippet }} */
@@ -34,4 +35,7 @@
   </nav>
   {@render children()}
   <p class="message" role="status">{message}</p>
+  <!-- Always rendered, so screen readers announce what appears in it. -->
+  <p class="update" role="status">{#if pwa.needRefresh}New version ready.<button type="button" class="alt" data-code="00-0003"
+        title="Reload to update; autosaved work carries over" onclick={reloadToUpdate}>Update</button>{:else if pwa.offlineReady}Ready to work offline.{/if}</p>
 </header>

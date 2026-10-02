@@ -1,3 +1,5 @@
+/// <reference types="vite-plugin-pwa/client" />
+
 declare module 'virtual:protokuda' {
   /** Version of the installed protokuda package. */
   export const version: string

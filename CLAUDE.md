@@ -1,6 +1,6 @@
 # Protokuda Studio
 
-A browser app, on its way to an installable PWA, with two tools for
+An installable web app (PWA) with two tools for
 [Protokuda](https://github.com/dennisdunn/protokuda):
 
 - **Designer**: lay out Protokuda screens visually, then export them as an HTML file and a CSS layout.
@@ -36,6 +36,15 @@ This repo was pk-designer; pk-themer was merged in with its history (its commits
   `var(--pk-*)` values get in (`cleanTheme`), so library themes are safe in the preview's `<style>`.
   Built-in names are reserved. A theme the library no longer has stays selected in a design, marked
   "not in your library".
+- **PWA** (`vite-plugin-pwa`, config in vite.config.js): works offline from the first visit; the build
+  is precached. Updates wait for the user (`registerType: 'prompt'`, an Update button in the toolbar) rather
+  than swapping code mid-edit. Installed, it asks for persistent storage (not in a tab: Firefox would prompt).
+- **The font is bundled** (`@fontsource-variable/antonio` files, declared in app.css as `"Antonio"`), so
+  it works offline and previews use the family name Protokuda and the exports use. Exports still link
+  Google Fonts.
+- **Icons:** the mark is Protokuda's elbow (rounded outside, square inside) with a 2x2 grid of palette
+  colors. `public/favicon.svg` is the source; `npm run icons` renders the PNGs (needs `rsvg-convert`), which
+  are committed so CI doesn't need it.
 - **Tooling:** Vite + Svelte 5 (runes). Vitest for the pure modules.
 
 ### Designer
@@ -78,10 +87,8 @@ This repo was pk-designer; pk-themer was merged in with its history (its commits
 ## Plan
 
 Merging into Protokuda Studio, in steps. Done: 1 import pk-themer's history; 2–4 one app with a shell,
-one `virtual:protokuda`, shared history and UI CSS; 5 the theme library. Next:
+one `virtual:protokuda`, shared history and UI CSS; 5 the theme library; 6 the PWA. Next:
 
-6. **PWA** (`vite-plugin-pwa`): manifest with Designer/Themer shortcuts, offline precache including the
-   Antonio font, prompt-to-update rather than swapping code mid-edit, `navigator.storage.persist()`.
 7. **Tablet**: `touch-action` on the canvas, 44px handles, File System Access save-in-place where available.
 8. **Deploy**: rename the repo to `pk-studio`; Pages URLs don't follow a rename, so leave redirect pages
    for `/pk-designer/` and `/pk-themer/`; archive pk-themer.
@@ -95,8 +102,9 @@ exact version for now); whether to inline the CSS as an export option.
 
 ## Code map
 
-- `npm run dev` / `npm test` / `npm run check` (svelte-check) / `npm run build`. CI (`ci.yml`) runs check,
-  test and build on every push. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
+- `npm run dev` / `npm test` / `npm run check` (svelte-check) / `npm run build`. The service worker only
+  runs in a build: `npm run build`, then the `preview` launch config (`vite preview` on port 4173); unregister
+  it afterwards, or it keeps serving this app on that port. CI (`ci.yml`) runs check, test and build on every push. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
   on `v*` tags (`npm version ...`) or a manual run.
 - `vite.config.js`: the `virtual:protokuda` module (`version`, `palette`, `themes`, `themeNames`; types in
   `src/virtual.d.ts`).
@@ -106,9 +114,12 @@ exact version for now); whether to inline the CSS as an export option.
   name in the other tool could match is scoped to `.designer` / `.themer` (the tool's `<main>`).
 - `src/shared/`:
   - `route.svelte.js`: the current view, from the hash;
-  - `Toolbar.svelte`: the studio header, the tool tabs and the status message; each tool fills in its buttons;
+  - `Toolbar.svelte`: the studio header, the tool tabs, the status message and the update notice; each
+    tool fills in its buttons;
   - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step;
-  - `library.svelte.js`: the theme library's state (its pure helpers are `src/themer/lib/library.js`).
+  - `library.svelte.js`: the theme library's state (its pure helpers are `src/themer/lib/library.js`);
+  - `pwa.svelte.js`: service worker registration, the update/offline notice state, persistent storage.
+- `public/`: favicon and app icons. `icons/`: the maskable icon's source and `render.sh`.
 
 **Designer** (`src/designer/`):
 - `Designer.svelte`: the tool's toolbar buttons, shortcuts and layout.

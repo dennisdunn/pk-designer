@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Protokuda Studio</title>
+  <rect width="512" height="512" rx="96" fill="#000"/>
+  <!-- Protokuda's elbow: rounded outside, square inside (the prototype era), sidebar wider than the bar -->
+  <path fill="#fc6" d="M64 440V184A112 112 0 0 1 176 72H448V144H152V440Z"/>
+  <!-- The studio: a grid of cells (the designer) in palette colors (the themer) -->
+  <rect x="200" y="192" width="116" height="116" fill="#9cf"/>
+  <rect x="332" y="192" width="116" height="116" fill="#c9c"/>
+  <rect x="200" y="324" width="116" height="116" fill="#f96"/>
+  <rect x="332" y="324" width="116" height="116" fill="#99c"/>
+</svg>

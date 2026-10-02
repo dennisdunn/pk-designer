@@ -5,6 +5,10 @@
 Two tools in one app; switch between them with the tabs at the top. Each keeps its work while you switch.
 Themes you save to your library in the themer show up in the designer's theme pickers.
 
+**Install it** from the browser (the install icon in the address bar, or Share → Add to Home Screen on
+an iPad) to get it as an app that works offline. When a new version is out, an **Update** button appears in
+the toolbar; your autosaved work carries over.
+
 - [Open the designer](https://dennisdunn.github.io/pk-designer/)
 - [Open the themer](https://dennisdunn.github.io/pk-themer/)
 
@@ -89,9 +93,11 @@ npm run dev      # http://localhost:5173
 npm test         # vitest
 npm run check    # svelte-check: types (JSDoc) and Svelte diagnostics
 npm run build    # static site in dist/
+npm run preview  # serve dist/; the service worker (offline, updates) only runs in a build
+npm run icons    # re-render the PNG icons from public/favicon.svg (needs rsvg-convert)
 ```
 
-Svelte 5 and Vite. The Protokuda version, palette and built-in themes come from the installed `protokuda`
+Svelte 5 and Vite, with `vite-plugin-pwa` for the service worker and manifest. The Protokuda version, palette and built-in themes come from the installed `protokuda`
 package at build time, so updating it is just `npm install protokuda@latest`; the previews and the exports'
 CDN links follow.
 

@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { paletteFrom, parseTheme } from './src/themer/lib/css.js'
 import { labelFor } from './src/themer/lib/theme.js'
 
@@ -43,10 +44,39 @@ function protokudaInfo() {
   }
 }
 
+// The installable app. Paths are relative, like `base`, so it works under any Pages path.
+// registerType 'prompt': a new version waits until the user reloads (src/shared/pwa.svelte.js),
+// rather than replacing the app mid-edit.
+const pwa = VitePWA({
+  registerType: 'prompt',
+  manifest: {
+    name: 'Protokuda Studio',
+    short_name: 'PK Studio',
+    description: 'Lay out Protokuda screens and make themes for them.',
+    start_url: './',
+    scope: './',
+    display: 'standalone',
+    background_color: '#000000',
+    theme_color: '#000000',
+    icons: [
+      { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
+      { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+      { src: 'maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
+    ],
+    shortcuts: [
+      { name: 'Designer', short_name: 'Designer', url: './#/designer' },
+      { name: 'Themer', short_name: 'Themer', url: './#/themer' },
+    ],
+  },
+  // Everything the app needs offline, the self-hosted font included, is in the build.
+  workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'] },
+})
+
 export default defineConfig({
   // Relative asset URLs, so the build works under a GitHub Pages project path (or anywhere).
   base: './',
-  plugins: [svelte(), protokudaInfo()],
+  plugins: [svelte(), protokudaInfo(), pwa],
   // PORT lets a preview launcher pick a free port.
   server: { port: Number(process.env.PORT) || 5173 },
 })
