@@ -3,7 +3,7 @@
 
 import { parseTrack } from './model.js'
 
-export const MIN_TRACK_PX = 16
+const MIN_TRACK_PX = 16
 
 const round = (n, step) => Math.round(n / step) * step
 const fmt = (n, unit) => `${+n.toFixed(2)}${unit}`

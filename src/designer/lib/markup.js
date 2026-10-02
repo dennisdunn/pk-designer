@@ -3,13 +3,13 @@
 
 import { FRAME_TYPES } from './model.js'
 
-export const FONT_URL = 'https://fonts.googleapis.com/css2?family=Antonio:wght@100..700&display=swap'
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Antonio:wght@100..700&display=swap'
 export const cdnUrl = (version) => `https://cdn.jsdelivr.net/npm/protokuda@${version}/dist/protokuda.min.css`
 
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESCAPES[c])
 
-export function frameClasses(frame) {
+function frameClasses(frame) {
   return [
     'pk-frame',
     FRAME_TYPES.find((t) => t.value === frame.type)?.className,
@@ -18,7 +18,7 @@ export function frameClasses(frame) {
   ].filter(Boolean)
 }
 
-export function screenClasses(design) {
+function screenClasses(design) {
   return ['pk-screen', design.page.alert && 'pk-alert'].filter(Boolean)
 }
 

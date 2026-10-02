@@ -93,7 +93,7 @@ export const PAGE_TOKENS = [
 export const DEFAULT_INNER_RADIUS = parseFloat(rootTokens['--pk-inner-radius']) || 0
 
 /** A new design's page theme: the package's default, read from protokuda.css at build time. */
-export const DEFAULT_THEME = defaultTheme
+const DEFAULT_THEME = defaultTheme
 
 const RESERVED_AREAS = new Set([
   'auto', 'span', 'none', 'default', 'inherit', 'initial', 'unset', 'revert', 'revert-layer',
@@ -102,7 +102,7 @@ const RESERVED_AREAS = new Set([
 // ---------- ids and names ----------
 
 let idCounter = 0
-export function newId() {
+function newId() {
   return globalThis.crypto?.randomUUID?.() ?? `f${Date.now().toString(36)}${idCounter++}`
 }
 
@@ -124,7 +124,7 @@ export function areaNameError(name, design, selfId) {
 /**
  * @param {Pick<Design, 'frames'>} design
  */
-export function nextAreaName(design) {
+function nextAreaName(design) {
   const used = new Set(design.frames.map((f) => f.area))
   for (let i = 1; ; i++) if (!used.has(`frame-${i}`)) return `frame-${i}`
 }
@@ -180,7 +180,7 @@ export function isValidLength(value) {
  * @param {Rect} a
  * @param {Rect} b
  */
-export function rectsOverlap(a, b) {
+function rectsOverlap(a, b) {
   return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
 }
 
@@ -188,7 +188,7 @@ export function rectsOverlap(a, b) {
  * @param {Grid} grid
  * @param {Rect} r
  */
-export function rectInGrid(grid, r) {
+function rectInGrid(grid, r) {
   return r.w >= 1 && r.h >= 1 && r.x >= 0 && r.y >= 0 &&
     r.x + r.w <= grid.columns.length && r.y + r.h <= grid.rows.length
 }

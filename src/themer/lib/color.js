@@ -27,7 +27,7 @@ export function resolve(theme, token, palette, seen = new Set()) {
  * @param {Record<string, string>} palette
  * @returns {string | null}
  */
-export function resolveValue(theme, value, palette, seen = new Set()) {
+function resolveValue(theme, value, palette, seen = new Set()) {
   if (isHex(value)) return expandHex(value)
   const ref = varName(value)
   if (!ref) return null
@@ -51,13 +51,13 @@ export function wouldCycle(/** @type {Theme} */ theme, /** @type {string} */ tok
 }
 
 /** `#abc` → `#aabbcc`, lowercased. */
-export function expandHex(/** @type {string} */ hex) {
+function expandHex(/** @type {string} */ hex) {
   const h = hex.toLowerCase()
   return h.length === 4 ? `#${h[1]}${h[1]}${h[2]}${h[2]}${h[3]}${h[3]}` : h
 }
 
 /** WCAG relative luminance of a #rrggbb color. */
-export function luminance(/** @type {string} */ hex) {
+function luminance(/** @type {string} */ hex) {
   const [r, g, b] = [1, 3, 5].map((i) => {
     const c = parseInt(hex.slice(i, i + 2), 16) / 255
     return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
@@ -75,7 +75,7 @@ export function contrast(/** @type {string} */ a, /** @type {string} */ b) {
  * The pairs that have to read against each other. Text needs 4.5:1 (WCAG AA);
  * frame edges and focus rings are non-text UI and need 3:1.
  */
-export const PAIRS = [
+const PAIRS = [
   { label: 'Content text', fg: '--pk-text', bg: '--pk-backdrop-light', min: 4.5 },
   { label: 'Titles and labels', fg: '--pk-on-backdrop', bg: '--pk-backdrop-light', min: 4.5 },
   { label: 'Nameplate and status text', fg: '--pk-on-primary', bg: '--pk-primary', min: 4.5 },

@@ -1,7 +1,7 @@
 // Which tool is showing, from the URL hash (#/designer, #/themer). Each tool keeps its own
 // module-level store, so switching views never loses work.
 
-export const VIEWS = /** @type {const} */ (['designer', 'themer'])
+const VIEWS = /** @type {const} */ (['designer', 'themer'])
 
 /** @returns {(typeof VIEWS)[number]} */
 function fromHash() {
