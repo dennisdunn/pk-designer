@@ -3,8 +3,8 @@
 
 import { strToU8, zipSync } from 'fflate'
 import { untrack } from 'svelte'
-import { themes, version } from 'virtual:protokuda'
-import { History } from './history.svelte.js'
+import { themeNames, version } from 'virtual:protokuda'
+import { History } from '../../shared/history.svelte.js'
 import { indexHtml, layoutCss } from './markup.js'
 import {
   fileBaseName, firstEmptyCell, newFrame, normalizeDesign, rectFits, starterDesign,
@@ -18,7 +18,7 @@ const STORAGE_KEY = 'pk-designer:design'
 function loadAutosave() {
   try {
     const json = localStorage.getItem(STORAGE_KEY)
-    return json ? normalizeDesign(JSON.parse(json), themes) : null
+    return json ? normalizeDesign(JSON.parse(json), themeNames) : null
   } catch {
     return null
   }
@@ -106,7 +106,7 @@ class Store {
 
   /** @param {File} file */
   async openJson(file) {
-    this.replace(normalizeDesign(JSON.parse(await file.text()), themes))
+    this.replace(normalizeDesign(JSON.parse(await file.text()), themeNames))
   }
 
   /** One zip with index.html and layout.css side by side, ready to unzip and open. */
@@ -120,4 +120,4 @@ class Store {
 }
 
 export const store = new Store()
-export { themes, version }
+export { themeNames, version }

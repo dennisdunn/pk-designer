@@ -1,9 +1,10 @@
 <script>
+  import Toolbar from '../shared/Toolbar.svelte'
   import Canvas from './components/Canvas.svelte'
   import FramePanel from './components/FramePanel.svelte'
   import PagePanel from './components/PagePanel.svelte'
   import { emptyDesign } from './lib/model.js'
-  import { store, version } from './lib/store.svelte.js'
+  import { store } from './lib/store.svelte.js'
 
   let fileInput
   let message = $state('')
@@ -52,9 +53,9 @@
 </script>
 
 <svelte:window onkeydown={shortcuts} />
+<svelte:head><title>Designer · Protokuda Studio</title></svelte:head>
 
-<header class="toolbar">
-  <h1><span class="mark">Protokuda</span> Designer <span class="version">pk {version}</span></h1>
+<Toolbar {message}>
   <nav aria-label="Design">
     <button type="button" data-code="01-0001" onclick={newDesign}>New</button>
     <button type="button" data-code="01-0002" onclick={() => fileInput.click()}>Open</button>
@@ -72,10 +73,9 @@
     <button type="button" class="alt" data-code="03-0001" title="Download index.html and layout.css as a zip"
       onclick={() => store.exportZip()}>Export</button>
   </nav>
-  <p class="message" role="status">{message}</p>
-</header>
+</Toolbar>
 
-<main class="workspace">
+<main class="workspace designer">
   <Canvas />
   <aside class="inspector" aria-label="Inspector">
     {#if store.selected}

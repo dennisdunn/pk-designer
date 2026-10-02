@@ -3,7 +3,7 @@
   // state (the area-name draft, position errors) resets when the selection changes.
   // Edits go straight into the store's design, which is the one source of truth.
   import { FRAME_TYPES, MODIFIERS, areaNameError, deleteFrame, placeFrame } from '../lib/model.js'
-  import { store, themes } from '../lib/store.svelte.js'
+  import { store, themeNames } from '../lib/store.svelte.js'
 
   // Only mounted while a frame is selected.
   const frame = $derived(/** @type {import('../lib/model.js').Frame} */ (store.selected))
@@ -102,7 +102,7 @@
     <label for="ins-frame-theme">Theme</label>
     <select id="ins-frame-theme" bind:value={frame.theme}>
       <option value="">Same as page</option>
-      {#each themes as t (t)}
+      {#each themeNames as t (t)}
         <option value={t}>{t}</option>
       {/each}
     </select>

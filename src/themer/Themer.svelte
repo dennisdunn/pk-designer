@@ -1,9 +1,10 @@
 <script>
+  import Toolbar from '../shared/Toolbar.svelte'
   import ContrastPanel from './components/ContrastPanel.svelte'
   import Preview from './components/Preview.svelte'
   import ThemePanel from './components/ThemePanel.svelte'
   import TokenRow from './components/TokenRow.svelte'
-  import { pkVersion, store } from './lib/store.svelte.js'
+  import { store } from './lib/store.svelte.js'
   import { fileBaseName } from './lib/theme.js'
   import { GROUPS } from './lib/tokens.js'
 
@@ -58,9 +59,9 @@
 </script>
 
 <svelte:window onkeydown={shortcuts} />
+<svelte:head><title>Themer · Protokuda Studio</title></svelte:head>
 
-<header class="toolbar">
-  <h1><span class="mark">Protokuda</span> Themer <span class="version">pk {pkVersion}</span></h1>
+<Toolbar {message}>
   <nav aria-label="Theme file">
     <button type="button" data-code="01-0001" title="Open a theme .css file" onclick={() => fileInput.click()}>Open</button>
     <input bind:this={fileInput} type="file" accept=".css,text/css" hidden onchange={open} />
@@ -77,10 +78,9 @@
     <button type="button" class="alt" data-code="03-0002"
       title="Copy the theme in protokuda's src/themes form" onclick={copySource}>Copy source</button>
   </nav>
-  <p class="message" role="status">{message}</p>
-</header>
+</Toolbar>
 
-<main class="workspace">
+<main class="workspace themer">
   <Preview />
   <aside class="inspector" aria-label="Inspector">
     <ThemePanel />

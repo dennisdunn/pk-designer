@@ -1,7 +1,7 @@
 <script>
   // Page-level settings: theme, tokens, and the grid tracks as text.
   import { PAGE_TOKENS, fileBaseName, isValidLength, isValidTrack, setTracks, splitTracks } from '../lib/model.js'
-  import { store, themes } from '../lib/store.svelte.js'
+  import { store, themeNames } from '../lib/store.svelte.js'
 
   const page = $derived(store.design.page)
   const grid = $derived(store.design.grid)
@@ -61,7 +61,7 @@
   <div class="field">
     <label for="ins-page-theme">Theme</label>
     <select id="ins-page-theme" bind:value={page.theme}>
-      {#each themes as t (t)}
+      {#each themeNames as t (t)}
         <option value={t}>{t}</option>
       {/each}
     </select>

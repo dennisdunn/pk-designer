@@ -1,7 +1,13 @@
-# Protokuda Designer
- > Lay out [Protokuda](https://github.com/dennisdunn/protokuda) screens visually, then export them as HTML and CSS.
+# Protokuda Studio
+ > Lay out [Protokuda](https://github.com/dennisdunn/protokuda) screens and make themes for them, then export
+ > them as HTML, CSS and theme files.
 
-[Open the designer](https://dennisdunn.github.io/pk-designer/)
+Two tools in one app; switch between them with the tabs at the top. Each keeps its work while you switch.
+
+- [Open the designer](https://dennisdunn.github.io/pk-designer/)
+- [Open the themer](https://dennisdunn.github.io/pk-themer/)
+
+## Designer
 
 A Protokuda screen is a CSS grid of frames. The designer edits that grid directly: set the column and row
 sizes, draw frames across cells, pick each frame's type, modifiers and theme, and see the result rendered
@@ -39,7 +45,36 @@ each frame's empty `pk-content` element after export.
 The design version is a plain counter: press **Next version** in the Page panel when you want a new one.
 It goes into the filenames and a `<meta name="version">` in the exported HTML.
 
-### Development
+## Themer
+
+A Protokuda theme is a set of `--pk-*` custom properties. The themer edits them against a sample screen
+rendered with the real `protokuda.css`, checks the pairs that sit on each other for WCAG AA contrast, and
+exports a theme file that drops in beside the library.
+
+### Using it
+
+- **Start from** a built-in theme (Theme panel), or **Open** any theme `.css`: a file from
+  `protokuda/dist/themes/`, a library source file from `src/themes/`, or one exported from here.
+- **Tokens:** each one is a palette color, another token (e.g. buttons follow `--pk-secondary-light`), or a
+  custom hex color. `--pk-on-backdrop` can stay unset, in which case titles and labels follow `--pk-primary`.
+- **Contrast:** text pairs need 4.5:1, frame edges and focus rings 3:1. Failing checks show in the Theme
+  panel and in full at the bottom of the inspector.
+- **Preview:** inner radius and a screen alert, to see the theme on LCARS-style elbows and under alert.
+  They aren't saved in the theme.
+- **Keyboard:** Ctrl/Cmd+Z undoes, Shift+Ctrl/Cmd+Z or Ctrl+Y redoes. The theme autosaves to the browser's
+  local storage.
+
+### Files
+
+- **Export** downloads `<name>-v<version>.zip` containing
+  - `<name>.css`: link it after `protokuda.css` to theme the page; it also defines `.pk-theme-<name>`
+    for theming a single frame or section. Its header comment holds the label, the theme version and the
+    Protokuda version it was made for; Open reads the label and version back.
+  - `README.md`: how to use the theme, with Protokuda links pinned to that version.
+- **Version** is a plain counter: press **Next version** in the Theme panel when you want a new one.
+- **Copy source** copies the theme in the library's `src/themes/<name>.css` form, for adding it to Protokuda.
+
+## Development
 
 ```
 npm install
@@ -49,16 +84,16 @@ npm run check    # svelte-check: types (JSDoc) and Svelte diagnostics
 npm run build    # static site in dist/
 ```
 
-Svelte 5 and Vite. The Protokuda version and theme list come from the installed `protokuda` package at
-build time, so updating it is just `npm install protokuda@latest`; the preview and the export's CDN link
-follow.
+Svelte 5 and Vite. The Protokuda version, palette and built-in themes come from the installed `protokuda`
+package at build time, so updating it is just `npm install protokuda@latest`; the previews and the exports'
+CDN links follow.
 
-- `src/lib/`: the parts with no DOM: the design model (its types are JSDoc typedefs in `model.js`) and its validation, the HTML/CSS export, track
-  resizing, undo history. These have the tests.
-- `src/components/`: the canvas (preview plus the editing layer), the rulers, and the inspector panels.
+- `src/App.svelte` and `src/shared/`: the shell, the tool tabs, the toolbar and undo history.
+- `src/designer/` and `src/themer/`: each tool. Their `lib/` folders hold the parts with no DOM (models,
+  validation, export, color and contrast), and these have the tests; `components/` holds the UI.
 - `CLAUDE.md`: the design decisions and a Protokuda class/token reference.
 
-### Releasing
+## Releasing
 
 ```
 npm version minor        # or patch / major
@@ -69,6 +104,6 @@ Every push runs `.github/workflows/ci.yml` (type-check, tests, build). Pushing a
 `.github/workflows/deploy.yml`, which does the same and deploys to GitHub Pages.
 It can also be run by hand from the Actions tab.
 
-### License
+## License
 
 MIT. See [LICENSE](LICENSE).

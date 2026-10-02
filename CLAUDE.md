@@ -1,16 +1,40 @@
-# Protokuda Designer
+# Protokuda Studio
 
-A browser app for laying out [Protokuda](https://github.com/dennisdunn/protokuda) screens visually,
-then exporting them as an HTML file and a CSS layout.
+A browser app, on its way to an installable PWA, with two tools for
+[Protokuda](https://github.com/dennisdunn/protokuda):
+
+- **Designer**: lay out Protokuda screens visually, then export them as an HTML file and a CSS layout.
+- **Themer**: make themes (pick token colors, see them on a sample screen, check contrast), then export a
+  theme file.
 
 Protokuda is a Star Trek-ish CSS library by the same author: what Michael Okuda might have drawn on
 his way to LCARS. It is deliberately *not* a faithful LCARS copy; it's the prototype era (square
-buttons with code numbers, thin bars, optional curved elbows). Keep that spirit in the designer's own UI.
+buttons with code numbers, thin bars, optional curved elbows). Keep that spirit in the studio's own UI.
+
+This repo was pk-designer; pk-themer was merged in with its history (its commits touch `src/themer/`).
 
 ## Decisions already made
 
-- **Separate repo.** The designer consumes the *published* `protokuda` npm package (3.x), not the
-  library source. Library changes happen in the protokuda repo and arrive here as package updates.
+### Both tools
+
+- **Separate from the library.** The studio consumes the *published* `protokuda` npm package (3.x), not
+  the library source. Library changes happen in the protokuda repo and arrive here as package updates.
+- **One app, not a monorepo.** One Vite build; the tools are views (`#/designer`, `#/themer`). Each keeps
+  its own module-level store, so switching views never loses work.
+- **Nothing hard-coded from the package**: `virtual:protokuda` (vite.config.js) gives the version, the
+  palette (parsed from `dist/protokuda.css`), the built-in themes (from `dist/themes/`) and their names.
+  The themer's token schema in `src/themer/lib/tokens.js` is the exception; a test checks it against the
+  default theme's tokens.
+- **WYSIWYG.** Previews render with the real `protokuda.css` from the installed package.
+- **Exports are zips** (`fflate`) named `<name>-v<version>.zip`, with Protokuda links pinned to the
+  **exact installed version**, so an export looks exactly like the preview. Exported HTML also links the
+  Antonio font (Protokuda doesn't import it; see below).
+- **Autosave** to `localStorage` (wrapped in try/catch). The keys (`pk-designer:design`, `pk-themer:theme`)
+  predate the merge; keep them so existing autosaves carry over.
+- **Tooling:** Vite + Svelte 5 (runes). Vitest for the pure modules.
+
+### Designer
+
 - **Grid-based, not freeform.** `.pk-screen` is a CSS grid. The designer edits that grid:
   - the user sets column and row tracks (`1fr`, `2fr`, `200px`, ...) and drags the lines between them;
   - each frame is a rectangle of cells, drawn and resized by dragging;
@@ -23,51 +47,89 @@ buttons with code numbers, thin bars, optional curved elbows). Keep that spirit 
   - `frames[]`: id, area name, cell rectangle, type, modifiers, theme (optional), title, label,
     sidebar items (text + `data-code`), status text;
   - `page`: page theme, `--pk-inner-radius`, other page-level tokens.
-- **WYSIWYG.** The preview renders the model with the real `protokuda.css` from the installed package.
-- **Export:**
-  - `index.html` with one element per frame, plus `layout.css` with named `grid-template-areas`.
-  - The exported HTML links Protokuda from jsDelivr at the **same version the designer uses**, so the
-    export looks exactly like the preview. Read the version from the installed package; don't hard-code it.
-  - It also links the Antonio font (Protokuda doesn't import it; see below).
-- **Save/load** designs as `.json` files, and **autosave** to `localStorage` (wrapped in try/catch).
+- **Export:** `index.html` with one element per frame, plus `layout.css` with named `grid-template-areas`.
+- **Save/load** designs as `.json` files.
 - **Frame content is placeholders only**: titles, labels, sidebar buttons and status text. Not arbitrary
   content inside frames; that's a page builder, not this app.
-- **Tooling:** Vite + Svelte 5 (runes). The design lives in one `$state` object in
-  `src/lib/store.svelte.js`; components edit it directly. Vitest for the pure modules.
+
+### Themer
+
+- **The theme is one model**: `{ name, label, version, tokens }` where token values are CSS values exactly as a
+  theme file writes them: `var(--pk-<palette>)`, `var(--pk-<token>)` or `#hex`. Preview, export,
+  autosave and undo all derive from it.
+- **The theme `.css` is the save format.** Open parses theme CSS (built `:root`, source `.pk-theme-x`, or
+  our export); Export writes `:root, .pk-theme-<name>` in `@layer protokuda.theme`. No separate JSON.
+- **Metadata lives in the header comment** (label, `Version N`, the Protokuda version), since CSS has
+  nowhere else for it; a custom property would leak into the cascade. `parseTheme` reads label and version.
+- **Export** holds `<name>.css` (stable name, for linking) and a `README.md` on using it.
+- **Preview**: the theme's tokens as inline custom properties on the stage (inline beats protokuda's layers).
+- **Contrast**: WCAG AA, 4.5:1 for text pairs, 3:1 for frame edges and focus rings (`PAIRS` in color.js).
+- **Two versions, kept apart by name**: `pkVersion` is the installed Protokuda package's (`virtual:protokuda`
+  exports it as `version`; import it as `pkVersion`), `theme.version` is the user's theme counter.
 
 ## Plan
 
-**First version (MVP):**
-- grid editor: track sizes, drawing frames, resizing frames;
-- frame inspector: type, modifiers, theme, title, label, sidebar buttons, status;
-- page theme picker and inner-radius control;
-- live preview;
-- export `index.html` and `layout.css` as one zip (Export button, `fflate`);
-- JSON save/load and localStorage autosave.
+Merging into Protokuda Studio, in steps. Done: 1 import pk-themer's history; 2–4 one app with a shell,
+one `virtual:protokuda`, shared history and UI CSS. Next:
 
-**Later:** responsive layouts (a grid per breakpoint), nested frames, a theme editor (palette colors,
-contrast checks, theme file export), more keyboard shortcuts.
+5. **Theme library**: themer themes saved to a library and offered in the designer's theme pickers; a
+   designer export includes the `.css` of any custom theme it uses (jsDelivr can't serve those).
+6. **PWA** (`vite-plugin-pwa`): manifest with Designer/Themer shortcuts, offline precache including the
+   Antonio font, prompt-to-update rather than swapping code mid-edit, `navigator.storage.persist()`.
+7. **Tablet**: `touch-action` on the canvas, 44px handles, File System Access save-in-place where available.
+8. **Deploy**: rename the repo to `pk-studio`; Pages URLs don't follow a rename, so leave redirect pages
+   for `/pk-designer/` and `/pk-themer/`; archive pk-themer.
 
-Open questions: whether the export should offer `@3` as well as the exact version (it pins the exact
-version for now); whether to inline the CSS as an export option.
+**Later, designer:** responsive layouts (a grid per breakpoint), nested frames, more keyboard shortcuts.
+**Later, themer:** palette editing (new named colors), contrast suggestions (nearest passing palette
+color), a light/dark backdrop toggle in the preview, sharing a theme by URL.
+
+Open questions: whether the designer's export should offer `@3` as well as the exact version (it pins the
+exact version for now); whether to inline the CSS as an export option.
 
 ## Code map
 
 - `npm run dev` / `npm test` / `npm run check` (svelte-check) / `npm run build`. CI (`ci.yml`) runs check,
   test and build on every push. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
   on `v*` tags (`npm version ...`) or a manual run.
-- `vite.config.js`: the `virtual:protokuda` module gives the installed package's `version` and `themes`.
-- `src/lib/model.js`: the JSON model (JSDoc typedefs `Design`, `Frame`, `Rect`, ... at the top), geometry (fits/overlap, insert/remove tracks), loading/validation.
-- `src/lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
+- `vite.config.js`: the `virtual:protokuda` module (`version`, `palette`, `themes`, `themeNames`; types in
+  `src/virtual.d.ts`).
+- `src/main.js`, `src/App.svelte`: mount the shell, which shows one tool by the URL hash.
+- `src/app.css`: the UI shared by both tools (toolbar, buttons, inspector, fields). `src/designer/designer.css`
+  and `src/themer/themer.css` hold each tool's own rules. All three load globally, so a rule that a class
+  name in the other tool could match is scoped to `.designer` / `.themer` (the tool's `<main>`).
+- `src/shared/`:
+  - `route.svelte.js`: the current view, from the hash;
+  - `Toolbar.svelte`: the studio header, the tool tabs and the status message; each tool fills in its buttons;
+  - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step.
+
+**Designer** (`src/designer/`):
+- `Designer.svelte`: the tool's toolbar buttons, shortcuts and layout.
+- `lib/model.js`: the JSON model (JSDoc typedefs `Design`, `Frame`, `Rect`, ... at the top), geometry (fits/overlap, insert/remove tracks), loading/validation.
+- `lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
   (scoped to `.pv`, frames matched by `data-area`, screen `inert`), so preview and export can't drift.
-- `src/lib/history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step.
-- `src/lib/gestures.js`: draw/move/resize/nudge as pure functions from cells to a rectangle.
-- `src/lib/tracks.js`: dragging the line between two tracks, keeping each track's unit.
+- `lib/gestures.js`: draw/move/resize/nudge as pure functions from cells to a rectangle.
+- `lib/tracks.js`: dragging the line between two tracks, keeping each track's unit.
+- `lib/store.svelte.js`: the design `$state` and editor state; components edit the design directly.
 - Editing rule: frames and tracks change through `model.js` functions (`placeFrame`, `deleteFrame`,
   `insertTrack`, ...) called on `store.design`; plain fields are edited directly. The store holds only
   editor state (selection, history, files). A selected id may outlive its frame; `store.selected` is null then.
-- `src/components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
+- `components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
   positioned from the screen's computed `grid-template-columns/rows`.
+
+**Themer** (`src/themer/`):
+- `Themer.svelte`: the tool's toolbar buttons, shortcuts and layout.
+- `lib/tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`,
+  `valueKind()` says whether a value is unset, custom hex, a palette color, a token reference or other.
+- `lib/theme.js`: the `Theme` type and model operations: naming, `startFrom`, `completeTheme`.
+- `lib/css.js`: reading theme CSS (`parseTheme`, `paletteFrom`) and writing it (`themeCss`, `sourceCss`).
+- `lib/color.js`: resolving values to colors, cycle detection, contrast and `contrastChecks`.
+- `lib/readme.js` + `readme.md`: the export README; edit the Markdown, `{{key}}` placeholders are filled
+  in by `readme()`, which throws on a placeholder it has no value for.
+- `lib/store.svelte.js`: the theme `$state`, derived contrast `checks`, preview options, autosave, open/export.
+- `lib/fixtures.js`: tests only; reads the installed package's built files.
+- `components/`: `Preview`, `ThemePanel` (label, name, version, start from, preview options),
+  `TokenRow`, `ContrastPanel`.
 
 ## Protokuda 3.x reference
 

@@ -17,7 +17,7 @@
      */
     "sourceMap": true,
     "esModuleInterop": true,
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "skipLibCheck": true,
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.
@@ -25,7 +25,7 @@
      */
     "checkJs": true,
     /**
-     * The shared types (Design, Frame, ...) are JSDoc typedefs in src/lib/model.js.
+     * The shared types (Design, Frame, ...) are JSDoc typedefs in src/designer/lib/model.js.
      * Untyped parameters are allowed; annotate where the type carries meaning.
      */
     "noImplicitAny": false

@@ -7,7 +7,7 @@ import { untrack } from 'svelte'
 import { palette, themes, version as pkVersion } from 'virtual:protokuda'
 import { contrastChecks } from './color.js'
 import { parseTheme, sourceCss, themeCss } from './css.js'
-import { History } from './history.svelte.js'
+import { History } from '../../shared/history.svelte.js'
 import { readme } from './readme.js'
 import { completeTheme, fileBaseName, isValidName, startFrom } from './theme.js'
 
