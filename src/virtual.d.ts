@@ -11,4 +11,6 @@ declare module 'virtual:protokuda' {
   export const themeNames: string[]
   /** The theme a page gets with no theme class (protokuda.css's `:root` values). */
   export const defaultTheme: string
+  /** protokuda.css's `:root` declarations, `--pk-*` name → value: every token's default. */
+  export const rootTokens: Record<string, string>
 }

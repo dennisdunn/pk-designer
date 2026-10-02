@@ -24,8 +24,9 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
 - **One app, not a monorepo.** One Vite build; the tools are views (`#/designer`, `#/themer`). Each keeps
   its own module-level store, so switching views never loses work.
 - **Nothing hard-coded from the package**: `virtual:protokuda` (vite.config.js) gives the version, the
-  palette (parsed from `dist/protokuda.css`), the built-in themes (from `dist/themes/`), their names and
-  the default theme (the one protokuda.css's `:root` matches; the build fails if none does). The token
+  palette (parsed from `dist/protokuda.css`), the built-in themes (from `dist/themes/`), their names, the
+  default theme (the one protokuda.css's `:root` matches; the build fails if none does) and the `:root`
+  values themselves (`rootTokens`, e.g. the page-token placeholders). The token
   schema in `src/shared/theme/tokens.js` is the exception; a test checks it against the default theme's tokens.
 - **Imports go one way.** The two tools never import each other; both import `src/shared/`. Theme code
   either tool needs (the model, token schema, theme CSS, library helpers) lives in `src/shared/theme/`.
@@ -114,7 +115,7 @@ exact version for now); whether to inline the CSS as an export option.
   its own; dev tooling and GitHub Actions are grouped. TypeScript majors are held back until svelte-check
   supports them (its peer dependency is `^5 || ^6`).
 - `vite.config.js`: the `virtual:protokuda` module (`version`, `palette`, `themes`, `themeNames`,
-  `defaultTheme`; types in `src/virtual.d.ts`). It imports `src/shared/theme/`, so those modules must stay
+  `defaultTheme`, `rootTokens`; types in `src/virtual.d.ts`). It imports `src/shared/theme/`, so those modules must stay
   free of browser-only code.
 - `src/main.js`, `src/App.svelte`: mount the shell, which shows one tool by the URL hash.
 - CSS, in three places:

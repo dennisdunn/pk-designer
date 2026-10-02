@@ -9,7 +9,8 @@ import { defaultThemeOf, labelFor } from './src/shared/theme/theme.js'
 
 // `virtual:protokuda` exposes facts about the installed protokuda package: its version
 // (for the exports' CDN links), its palette (from dist/protokuda.css), its themes (from
-// dist/themes) and which of them is the default (the one protokuda.css's `:root` matches).
+// dist/themes), which of them is the default (the one protokuda.css's `:root` matches), and the
+// `:root` values themselves (token defaults, for placeholders).
 // Nothing here is hard-coded, so a package update flows through on the next build.
 function protokudaInfo() {
   const id = 'virtual:protokuda'
@@ -35,7 +36,8 @@ function protokudaInfo() {
             return [name, { name, label: labelFor(name, palette), version: 1, tokens }]
           }),
       )
-      const defaultTheme = defaultThemeOf(rootDeclarations(css), themes)
+      const rootTokens = rootDeclarations(css)
+      const defaultTheme = defaultThemeOf(rootTokens, themes)
       if (!defaultTheme) throw new Error("protokuda.css's :root defaults match none of its themes")
       return [
         `export const version = ${JSON.stringify(version)};`,
@@ -43,6 +45,7 @@ function protokudaInfo() {
         `export const themes = ${JSON.stringify(themes)};`,
         `export const themeNames = ${JSON.stringify(Object.keys(themes))};`,
         `export const defaultTheme = ${JSON.stringify(defaultTheme)};`,
+        `export const rootTokens = ${JSON.stringify(rootTokens)};`,
         '',
       ].join('\n')
     },

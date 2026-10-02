@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { rootDeclarations } from '../../shared/theme/css.js'
+import { pkg } from '../../shared/theme/fixtures.js'
 import {
   areaNameError, deleteFrame, fileBaseName, insertTrack, placeFrame, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
-  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame, usedThemes,
+  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame, usedThemes, PAGE_TOKENS,
 } from './model.js'
 
 /** @type {(id: string, rect: import('./model.js').Rect) => import('./model.js').Frame} */
@@ -128,6 +130,16 @@ describe('design version', () => {
     expect(normalizeDesign(d).page.version).toBe(1)
     d.page.version = 7
     expect(normalizeDesign(d).page.version).toBe(7)
+  })
+})
+
+describe('page tokens', () => {
+  it("are tokens protokuda.css's :root sets, with its values as placeholders", () => {
+    const root = rootDeclarations(pkg('protokuda.css'))
+    for (const t of PAGE_TOKENS) {
+      expect(root[t.name], t.name).toBeTruthy()
+      expect(t.placeholder).toBe(root[t.name])
+    }
   })
 })
 

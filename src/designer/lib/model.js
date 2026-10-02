@@ -6,7 +6,7 @@
 // Plain fields (titles, themes, tokens) are edited directly. The store only adds
 // editor state on top: selection, history, files.
 
-import { defaultTheme } from 'virtual:protokuda'
+import { defaultTheme, rootTokens } from 'virtual:protokuda'
 
 // The file format's version. Not to be confused with `page.version`, the design's own
 // version number, which the user bumps and which goes into download filenames.
@@ -77,13 +77,14 @@ export const MODIFIERS = [
 
 // Page-level tokens the inspector offers. An empty value means "library default".
 export const PAGE_TOKENS = [
-  { name: '--pk-frame-line', label: 'Frame line', placeholder: '3px' },
-  { name: '--pk-frame-bar', label: 'Frame bar', placeholder: '0.5rem' },
-  { name: '--pk-frame-side', label: 'Frame side', placeholder: '1.1rem' },
-  { name: '--pk-frame-radius', label: 'Frame radius', placeholder: '2rem' },
-  { name: '--pk-sidebar-width', label: 'Sidebar width', placeholder: '5rem' },
-  { name: '--pk-statusline-height', label: 'Statusline height', placeholder: '2rem' },
-]
+  { name: '--pk-frame-line', label: 'Frame line' },
+  { name: '--pk-frame-bar', label: 'Frame bar' },
+  { name: '--pk-frame-side', label: 'Frame side' },
+  { name: '--pk-frame-radius', label: 'Frame radius' },
+  { name: '--pk-sidebar-width', label: 'Sidebar width' },
+  { name: '--pk-statusline-height', label: 'Statusline height' },
+  // Each placeholder is Protokuda's own default, read from protokuda.css at build time.
+].map((t) => ({ ...t, placeholder: rootTokens[t.name] ?? '' }))
 
 /** A new design's page theme: the package's default, read from protokuda.css at build time. */
 export const DEFAULT_THEME = defaultTheme
