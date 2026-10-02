@@ -25,6 +25,6 @@ The class works on its own, or inside a page that uses a different theme.
 
 ## Changing it
 
-Open `{{file}}` in [Protokuda Themer](https://dennisdunn.github.io/pk-themer/) to keep editing.
+Open `{{file}}` in the themer of [Protokuda Studio](https://dennisdunn.github.io/pk-studio/#/themer) to keep editing.
 The theme is plain CSS custom properties in Protokuda's `protokuda.theme` cascade layer, so your
 own CSS outside a layer overrides any of them, e.g. `:root { --pk-primary: #f90; }`.

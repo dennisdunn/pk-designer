@@ -12,6 +12,8 @@ his way to LCARS. It is deliberately *not* a faithful LCARS copy; it's the proto
 buttons with code numbers, thin bars, optional curved elbows). Keep that spirit in the studio's own UI.
 
 This repo was pk-designer; pk-themer was merged in with its history (its commits touch `src/themer/`).
+Published at https://dennisdunn.github.io/pk-studio/. The old `/pk-designer/` and `/pk-themer/` addresses
+are redirect pages in the dennisdunn.github.io repo; they share the origin, so autosaves carry over.
 
 ## Decisions already made
 

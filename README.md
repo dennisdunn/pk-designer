@@ -11,8 +11,10 @@ and themes (`.css`) from your file manager with "Open with". On a tablet in port
 inspector under the canvas. When a new version is out, an **Update** button appears in
 the toolbar; your autosaved work carries over.
 
-- [Open the designer](https://dennisdunn.github.io/pk-designer/)
-- [Open the themer](https://dennisdunn.github.io/pk-themer/)
+[Open Protokuda Studio](https://dennisdunn.github.io/pk-studio/) (or go straight to the
+[designer](https://dennisdunn.github.io/pk-studio/#/designer) or the
+[themer](https://dennisdunn.github.io/pk-studio/#/themer)). It replaces Protokuda Designer and Protokuda
+Themer, whose old addresses redirect here; work autosaved in either carries over.
 
 ## Designer
 
