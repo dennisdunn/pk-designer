@@ -69,3 +69,37 @@
     </div>
   {/if}
 </div>
+
+<style>
+  /* Swatch, label, then the value. */
+  .token {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 0.2rem 0.6rem;
+    align-items: center;
+    margin-bottom: 0.7rem;
+  }
+  .swatch {
+    grid-row: span 2;
+    align-self: stretch;
+    border: 1px solid var(--ui-muted);
+  }
+  /* Unresolvable value: hatched, so it doesn't read as a color. */
+  .swatch.unknown {
+    background: repeating-linear-gradient(45deg, var(--ui-line) 0 4px, transparent 4px 8px);
+  }
+  .custom {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 0.4rem;
+  }
+  input[type='color'] {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 1px solid #789;
+    cursor: pointer;
+  }
+</style>

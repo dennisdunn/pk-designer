@@ -114,9 +114,11 @@ exact version for now); whether to inline the CSS as an export option.
   `defaultTheme`; types in `src/virtual.d.ts`). It imports `src/shared/theme/`, so those modules must stay
   free of browser-only code.
 - `src/main.js`, `src/App.svelte`: mount the shell, which shows one tool by the URL hash.
-- `src/app.css`: the UI shared by both tools (toolbar, buttons, inspector, fields). `src/designer/designer.css`
-  and `src/themer/themer.css` hold each tool's own rules. All three load globally, so a rule that a class
-  name in the other tool could match is scoped to `.designer` / `.themer` (the tool's `<main>`).
+- CSS, in three places:
+  - `src/app.css`: the UI shared by both tools (toolbar, buttons, inspector, fields), global;
+  - a component's own `<style>`: anything only that component uses (Svelte scopes it);
+  - `src/designer/designer.css`, `src/themer/themer.css`: what several of a tool's components share, plus
+    its layout. These load globally too, so every rule starts with `.designer` / `.themer` (the tool's `<main>`).
 - `src/shared/`:
   - `route.svelte.js`: the current view, from the hash;
   - `Toolbar.svelte`: the studio header, the tool tabs, the status message and the update notice; each

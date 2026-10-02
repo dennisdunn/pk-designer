@@ -78,3 +78,61 @@
     </div>
   </div>
 </div>
+
+<style>
+  .stage {
+    overflow: auto;
+    min-height: 0;
+    font-family: var(--pk-sans-font-family);
+    background: var(--pk-backdrop);
+  }
+  .pk-screen.sample {
+    min-height: 100%;
+    grid-template-columns: minmax(18rem, 3fr) minmax(14rem, 2fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      'nav colors'
+      'nav scan'
+      'alert status';
+  }
+  .nav { grid-area: nav; }
+  .colors { grid-area: colors; }
+  .scan { grid-area: scan; }
+  .alert { grid-area: alert; }
+  .status { grid-area: status; }
+
+  p {
+    margin: 0 0 0.75rem;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .controls input[type='text'] {
+    width: 9rem;
+  }
+  .controls input[type='number'] {
+    width: 4rem;
+  }
+  .shades {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+  .shades span {
+    padding: 0.4rem 0.4rem 0.2rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: var(--pk-letter-spacing);
+  }
+
+  @media (max-width: 52rem) {
+    .pk-screen.sample {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'nav' 'colors' 'scan' 'alert' 'status';
+    }
+  }
+</style>

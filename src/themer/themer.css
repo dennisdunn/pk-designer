@@ -1,159 +1,16 @@
-/* The themer's inspector and preview. Shared UI is in src/app.css; rules a designer
-   class name could also match are scoped to .themer. */
+/* Themer rules that more than one of its components use, and its layout. Shared UI is in
+   src/app.css; rules for one component are in that component. Scoped to .themer (its <main>). */
 
 .workspace.themer {
   grid-template-columns: minmax(0, 1fr) 24rem;
 }
 
-.inspector .help.summary {
+.themer .inspector .help.summary {
   font-size: 0.95rem;
   color: var(--ui-text);
 }
-.inspector .help.summary.error {
+.themer .inspector .help.summary.error {
   color: var(--ui-danger);
-}
-.themer .inspector label.choice {
-  margin-bottom: 0.5rem;
-}
-
-.inspector .row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.4rem;
-}
-
-/* The library: one row per saved theme, the open one marked. */
-.library {
-  margin: 0.75rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-.library li {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 0.3rem;
-  align-items: center;
-  padding: 0.3rem 0 0.3rem 0.5rem;
-  border-bottom: 1px solid var(--ui-line);
-  border-left: 3px solid transparent;
-}
-.library li.open {
-  border-left-color: var(--ui-primary);
-}
-.library .name {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-/* A token: swatch, label, then its value. */
-.token {
-  display: grid;
-  grid-template-columns: 2.4rem 1fr;
-  gap: 0.2rem 0.6rem;
-  align-items: center;
-  margin-bottom: 0.7rem;
-}
-.token .swatch {
-  grid-row: span 2;
-  align-self: stretch;
-  border: 1px solid var(--ui-muted);
-}
-/* Unresolvable value: hatched, so it doesn't read as a color. */
-.token .swatch.unknown {
-  background: repeating-linear-gradient(45deg, var(--ui-line) 0 4px, transparent 4px 8px);
-}
-.token .custom {
-  grid-column: 2;
-  display: grid;
-  grid-template-columns: 2.4rem 1fr;
-  gap: 0.4rem;
-}
-.token input[type='color'] {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  background: none;
-  border: 1px solid #789;
-  cursor: pointer;
-}
-
-.checks {
-  margin: 0.6rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-.checks li {
-  display: grid;
-  grid-template-columns: 2.4rem 1fr auto;
-  gap: 0.6rem;
-  align-items: center;
-  padding: 0.3rem 0;
-  border-bottom: 1px solid var(--ui-line);
-  font-size: 0.9rem;
-}
-.checks .sample {
-  display: grid;
-  place-items: center;
-  height: 2rem;
-  font-size: 1.1rem;
-  border: 1px solid var(--ui-line);
-}
-.checks .ratio {
-  font-variant-numeric: tabular-nums;
-}
-.checks li.fail .ratio {
-  color: var(--ui-danger);
-}
-
-/* ---------- preview ---------- */
-
-.themer > .stage {
-  overflow: auto;
-  min-height: 0;
-  font-family: var(--pk-sans-font-family);
-  background: var(--pk-backdrop);
-}
-.themer .pk-screen.sample {
-  min-height: 100%;
-  grid-template-columns: minmax(18rem, 3fr) minmax(14rem, 2fr);
-  grid-template-rows: auto auto auto;
-  grid-template-areas:
-    'nav colors'
-    'nav scan'
-    'alert status';
-}
-.sample .nav { grid-area: nav; }
-.sample .colors { grid-area: colors; }
-.sample .scan { grid-area: scan; }
-.sample .alert { grid-area: alert; }
-.sample .status { grid-area: status; }
-
-.sample p {
-  margin: 0 0 0.75rem;
-}
-.sample .controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-.sample .controls input[type='text'] {
-  width: 9rem;
-}
-.sample .controls input[type='number'] {
-  width: 4rem;
-}
-.sample .shades {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.25rem;
-  margin-bottom: 0.25rem;
-}
-.sample .shades span {
-  padding: 0.4rem 0.4rem 0.2rem;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: var(--pk-letter-spacing);
 }
 
 @media (max-width: 52rem) {
@@ -161,10 +18,6 @@
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     overflow-y: auto;
-  }
-  .themer .pk-screen.sample {
-    grid-template-columns: 1fr;
-    grid-template-areas: 'nav' 'colors' 'scan' 'alert' 'status';
   }
   .themer .inspector {
     border-left: none;

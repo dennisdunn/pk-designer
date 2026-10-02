@@ -178,3 +178,51 @@
     Delete frame
   </button>
 </section>
+
+<style>
+  textarea {
+    resize: vertical;
+  }
+
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.9rem;
+  }
+
+  /* A sidebar button: text, code, then move up, move down and remove. */
+  .item {
+    display: grid;
+    grid-template-columns: 1fr 5rem repeat(3, 1.6rem);
+    gap: 0.2rem;
+    margin-bottom: 0.3rem;
+  }
+  button.icon {
+    padding: 0;
+    font: inherit;
+    color: var(--ui-text);
+    background: transparent;
+    border: 1px solid var(--ui-line);
+    cursor: pointer;
+  }
+  button.icon:hover:not(:disabled) {
+    color: var(--ui-on-accent);
+    background: var(--ui-accent);
+  }
+  button.icon:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  /* The cell rectangle: x, y, w, h. */
+  .rect {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+  .rect label {
+    display: grid;
+    gap: 0.2rem;
+    font-size: 0.75rem;
+  }
+</style>

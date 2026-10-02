@@ -15,3 +15,9 @@
   </label>
   <p class="help">Preview settings only; they aren't part of the theme.</p>
 </section>
+
+<style>
+  label.choice {
+    margin-bottom: 0.5rem;
+  }
+</style>

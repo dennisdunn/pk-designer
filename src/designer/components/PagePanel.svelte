@@ -127,3 +127,14 @@
     {/each}
   </details>
 </section>
+
+<style>
+  .panel > label.choice {
+    margin-bottom: 0.75rem;
+  }
+
+  details summary {
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+  }
+</style>

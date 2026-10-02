@@ -92,3 +92,11 @@
     <a href="#ins-contrast-heading">Contrast</a>
   </p>
 </section>
+
+<style>
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.4rem;
+  }
+</style>

@@ -116,3 +116,11 @@
     <PagePanel />
   </aside>
 </main>
+
+<style>
+  p.hint.panel {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--ui-muted);
+  }
+</style>

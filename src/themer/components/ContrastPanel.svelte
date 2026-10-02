@@ -25,3 +25,33 @@
     {/each}
   </ul>
 </section>
+
+<style>
+  .checks {
+    margin: 0.6rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--ui-line);
+    font-size: 0.9rem;
+  }
+  .sample {
+    display: grid;
+    place-items: center;
+    height: 2rem;
+    font-size: 1.1rem;
+    border: 1px solid var(--ui-line);
+  }
+  .ratio {
+    font-variant-numeric: tabular-nums;
+  }
+  li.fail .ratio {
+    color: var(--ui-danger);
+  }
+</style>
