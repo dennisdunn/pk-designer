@@ -3,7 +3,7 @@
 // re-read when another window changes it.
 
 import { defaultTheme, palette, themeNames, themes as builtIns } from 'virtual:protokuda'
-import { cleanTheme, readThemes, sameTheme } from './theme/library.js'
+import { cleanTheme, mergeThemes, readThemes } from './theme/library.js'
 
 /** @typedef {import('./theme/theme.js').Theme} Theme */
 
@@ -58,17 +58,10 @@ class Library {
    * @param {any} raw  a design file's `themes`
    */
   merge(raw) {
-    const added = []
-    const differed = []
-    for (const [name, theme] of Object.entries(readThemes(raw, PKG))) {
-      const mine = this.themes[name]
-      if (!mine) {
-        this.themes[name] = theme
-        added.push(name)
-      } else if (!sameTheme(mine, theme)) differed.push(name)
-    }
-    if (added.length) this.#persist()
-    return { added, differed }
+    const { add, differed } = mergeThemes(this.themes, readThemes(raw, PKG))
+    for (const theme of add) this.themes[theme.name] = theme
+    if (add.length) this.#persist()
+    return { added: add.map((t) => t.name), differed }
   }
 
   #persist() {

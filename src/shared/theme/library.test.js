@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseTheme } from './css.js'
 import { pkg, palette } from './fixtures.js'
-import { cleanTheme, readThemes, sameTheme } from './library.js'
+import { cleanTheme, mergeThemes, readThemes, sameTheme } from './library.js'
 
 const base = parseTheme(pkg('themes/greysmoke.css')).tokens
 const PKG = { base, palette, builtIn: ['greysmoke', 'lilac'] }
@@ -62,5 +62,25 @@ describe('sameTheme', () => {
     expect(sameTheme(ember(), { ...ember(), tokens: { ...ember().tokens, '--pk-primary': '#f61' } })).toBe(false)
     expect(sameTheme(ember(), { ...ember(), label: 'Embers' })).toBe(false)
     expect(sameTheme(ember(), { ...ember(), version: 3 })).toBe(false)
+  })
+})
+
+describe('mergeThemes', () => {
+  const lilac2 = () => ({ ...ember(), name: 'mylilac', label: 'My Lilac' })
+
+  it('adds the themes the library lacks', () => {
+    const { add, differed } = mergeThemes({ ember: ember() }, { ember: ember(), mylilac: lilac2() })
+    expect(add).toEqual([lilac2()])
+    expect(differed).toEqual([])
+  })
+
+  it("keeps the library's theme on a clash, and reports it only if they differ", () => {
+    const changed = { ...ember(), version: 3 }
+    expect(mergeThemes({ ember: ember() }, { ember: changed })).toEqual({ add: [], differed: ['ember'] })
+    expect(mergeThemes({ ember: ember() }, { ember: ember() })).toEqual({ add: [], differed: [] })
+  })
+
+  it('does nothing with nothing incoming', () => {
+    expect(mergeThemes({ ember: ember() }, {})).toEqual({ add: [], differed: [] })
   })
 })

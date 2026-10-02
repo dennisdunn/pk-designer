@@ -7,7 +7,8 @@
   import { classRule } from '../../shared/theme/css.js'
   import { EDGES, drawRect, moveRect, nudgeRect, resizeRect, trackAt } from '../lib/gestures.js'
   import { layoutCss, screenMarkup } from '../lib/markup.js'
-  import { deleteFrame, frameAtCell, placeFrame, splitTracks } from '../lib/model.js'
+  import { measureGrid } from '../lib/measure.js'
+  import { deleteFrame, frameAtCell, placeFrame } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
   import { resizeTrackPair } from '../lib/tracks.js'
   import Ruler from './Ruler.svelte'
@@ -16,11 +17,7 @@
 
   let canvas = $state()
   let guides = $state()
-  /** @typedef {import('../lib/gestures.js').Span} Span */
-  /**
-   * Measured grid, in px relative to the canvas.
-   * @type {{ cols: Span[], rows: Span[], gapX: number, gapY: number, fontSize: number, contentW: number, contentH: number }}
-   */
+  /** Measured grid, in px relative to the canvas. @type {import('../lib/measure.js').GridMeasure} */
   let m = $state({ cols: [], rows: [], gapX: 0, gapY: 0, fontSize: 16, contentW: 0, contentH: 0 })
   /** Current pointer gesture, if any. */
   let drag = null
@@ -43,34 +40,11 @@
 
   // ---------- measurement ----------
 
-  const px = (v) => parseFloat(v) || 0
-
   function measure() {
     const screen = canvas?.querySelector('.pk-screen')
     if (!screen) return
-    const cs = getComputedStyle(screen)
-    const cr = canvas.getBoundingClientRect()
-    const sr = screen.getBoundingClientRect()
-    const spans = (template, start, gap) => {
-      let p = start
-      return splitTracks(template).map((t) => {
-        const size = px(t)
-        const span = { start: p, end: p + size }
-        p += size + gap
-        return span
-      })
-    }
-    const padX = px(cs.paddingLeft) + px(cs.paddingRight)
-    const padY = px(cs.paddingTop) + px(cs.paddingBottom)
-    m = {
-      cols: spans(cs.gridTemplateColumns, sr.left - cr.left + px(cs.borderLeftWidth) + px(cs.paddingLeft), px(cs.columnGap)),
-      rows: spans(cs.gridTemplateRows, sr.top - cr.top + px(cs.borderTopWidth) + px(cs.paddingTop), px(cs.rowGap)),
-      gapX: px(cs.columnGap),
-      gapY: px(cs.rowGap),
-      fontSize: px(getComputedStyle(document.documentElement).fontSize) || 16,
-      contentW: sr.width - padX,
-      contentH: sr.height - padY,
-    }
+    const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    m = measureGrid(getComputedStyle(screen), screen.getBoundingClientRect(), canvas.getBoundingClientRect(), fontSize)
   }
 
   // Re-measure whenever the rendered preview changes...

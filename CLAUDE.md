@@ -128,7 +128,8 @@ exact version for now); whether to inline the CSS as an export option.
     fields that keep their own native undo;
   - `library.svelte.js`: the theme library's state (its pure helpers are `theme/library.js`);
   - `pwa.svelte.js`: service worker registration, the update/offline notice state, persistent storage;
-  - `files.js`: `pickFile`, `saveFile` (in place where possible), `download`, and `takeFile` for file inputs;
+  - `files.js`: `pickFile`, `saveFile` (in place where possible), `download`, and `takeFile` for file inputs.
+    The pickers come from `window` by default; tests pass stand-ins;
   - `launch.svelte.js`: files opened with the installed app, waiting for the view that opens them;
   - `theme/`, the theme model both tools use, with its tests:
     - `tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`, `valueKind()`
@@ -137,7 +138,8 @@ exact version for now); whether to inline the CSS as an export option.
       `defaultThemeOf`;
     - `css.js`: reading theme CSS (`parseTheme`, `paletteFrom`, `rootDeclarations`) and writing it
       (`themeCss`, `sourceCss`, and for the designer `classCss` and `classRule`);
-    - `library.js`: the library's pure helpers: `cleanTheme`, `readThemes`, `sameTheme`;
+    - `library.js`: the library's pure helpers: `cleanTheme`, `readThemes`, `sameTheme`, and `mergeThemes`
+      (what opening a design file adds to the library);
     - `fixtures.js`: tests only; reads the installed package's built files.
 - `public/`: favicon and app icons. `icons/`: the maskable icon's source and `render.sh`.
 
@@ -148,6 +150,8 @@ exact version for now); whether to inline the CSS as an export option.
   (scoped to `.pv`, frames matched by `data-area`, screen `inert`), so preview and export can't drift.
 - `lib/gestures.js`: draw/move/resize/nudge as pure functions from cells to a rectangle.
 - `lib/tracks.js`: dragging the line between two tracks, keeping each track's unit.
+- `lib/measure.js`: `measureGrid`, where the screen's tracks are in canvas pixels, from its computed style
+  and bounding boxes; the canvas positions its guides from it.
 - `lib/store.svelte.js`: the design `$state` and editor state; components edit the design directly.
   `customThemes` are the library themes the design uses: the preview injects their `classRule`s, Save
   embeds them and Export writes them out.
@@ -155,7 +159,7 @@ exact version for now); whether to inline the CSS as an export option.
   `insertTrack`, ...) called on `store.design`; plain fields are edited directly. The store holds only
   editor state (selection, history, files). A selected id may outlive its frame; `store.selected` is null then.
 - `components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
-  positioned from the screen's computed `grid-template-columns/rows`.
+  positioned by `measureGrid`.
 - `components/ThemeOptions.svelte`: a theme picker's options, built-in then library.
 
 **Themer** (`src/themer/`):

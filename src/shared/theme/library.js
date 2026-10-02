@@ -54,3 +54,22 @@ export function sameTheme(a, b) {
     keys.every((k) => a.tokens[k] === b.tokens[k])
   )
 }
+
+/**
+ * What opening a design file does to the library: themes it carries that the library lacks are
+ * added; where the library has a theme by the same name, the library's wins, and differing ones are
+ * reported. `incoming` should already be validated (`readThemes`).
+ * @param {Record<string, Theme>} mine  the library
+ * @param {Record<string, Theme>} incoming  the design file's themes
+ * @returns {{ add: Theme[], differed: string[] }}
+ */
+export function mergeThemes(mine, incoming) {
+  const add = []
+  const differed = []
+  for (const theme of Object.values(incoming)) {
+    const existing = mine[theme.name]
+    if (!existing) add.push(theme)
+    else if (!sameTheme(existing, theme)) differed.push(theme.name)
+  }
+  return { add, differed }
+}
