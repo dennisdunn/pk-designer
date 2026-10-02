@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseTheme, sourceCss, themeCss } from './css.js'
+import { classCss, classRule, parseTheme, sourceCss, themeCss } from './css.js'
 import { pkg, palette } from './fixtures.js'
 import { TOKENS } from './tokens.js'
 
@@ -23,6 +23,27 @@ describe('parse and write', () => {
     const css = themeCss(t, '3.0.1')
     expect(css).toMatch(/^\/\*\*\nAtomic\nVersion 7\nMade with Protokuda Themer for Protokuda 3\.0\.1\n\*\//)
     expect(parseTheme(css, 'x')).toEqual(t)
+  })
+
+  it('writes a class-only file that leaves :root alone and reads back', () => {
+    const t = { ...parseTheme(pkg('themes/atomic.css'), 'atomic'), name: 'ember', label: 'Ember', version: 2 }
+    const css = classCss(t, '3.0.1')
+    expect(css).not.toContain(':root')
+    expect(css).toContain('@layer protokuda.theme {\n  .pk-theme-ember {')
+    expect(parseTheme(css, 'x')).toEqual(t)
+  })
+
+  it('writes a bare class rule for previews, with no comment', () => {
+    const t = { ...parseTheme(pkg('themes/atomic.css'), 'atomic'), name: 'ember', label: 'x */ y' }
+    const css = classRule(t)
+    expect(css).toMatch(/^@layer protokuda\.theme \{\n {2}\.pk-theme-ember \{/)
+    expect(css).not.toContain('/*')
+  })
+
+  it("keeps a label from ending the header comment", () => {
+    const t = { ...parseTheme(pkg('themes/atomic.css'), 'atomic'), label: 'A */ B' }
+    expect(themeCss(t, '3.0.1')).toMatch(/^\/\*\*\nA \* \/ B\n/)
+    expect(sourceCss(t)).toMatch(/^\/\*\*\nA \* \/ B\n/)
   })
 
   it('round-trips through the source form, which has no version', () => {

@@ -304,6 +304,15 @@ export function fileBaseName(design) {
   return `${title}-v${design.page.version}`
 }
 
+/**
+ * Every theme the design uses, page first, without repeats.
+ * @param {Design} design
+ * @returns {string[]}
+ */
+export function usedThemes(design) {
+  return [...new Set([design.page.theme, ...design.frames.map((f) => f.theme)].filter(Boolean))]
+}
+
 // ---------- construction and loading ----------
 
 /**

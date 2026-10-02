@@ -118,10 +118,11 @@ body {
   opacity: 0.75;
 }
 .toolbar button:hover:not(:disabled),
-.inspector button:not(.icon):hover {
+.inspector button:not(.icon):hover:not(:disabled) {
   filter: brightness(0.85);
 }
-.toolbar button:disabled {
+.toolbar button:disabled,
+.inspector button:not(.icon):disabled {
   opacity: 0.4;
   cursor: default;
 }
@@ -238,6 +239,10 @@ body {
   font-size: 0.85rem;
   color: var(--ui-on-accent);
   background: var(--ui-accent);
+}
+.inspector button.danger {
+  color: var(--ui-on-danger);
+  background: var(--ui-danger);
 }
 
 .inspector code.filename {

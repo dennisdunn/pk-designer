@@ -5,9 +5,11 @@ import { strToU8, zipSync } from 'fflate'
 import { untrack } from 'svelte'
 import { themeNames, version } from 'virtual:protokuda'
 import { History } from '../../shared/history.svelte.js'
+import { library } from '../../shared/library.svelte.js'
+import { classCss } from '../../themer/lib/css.js'
 import { indexHtml, layoutCss } from './markup.js'
 import {
-  fileBaseName, firstEmptyCell, newFrame, normalizeDesign, rectFits, starterDesign,
+  fileBaseName, firstEmptyCell, newFrame, normalizeDesign, rectFits, starterDesign, usedThemes,
 } from './model.js'
 
 /** @typedef {import('./model.js').Design} Design */
@@ -15,10 +17,13 @@ import {
 
 const STORAGE_KEY = 'pk-designer:design'
 
+/** Theme names a design may use: the package's and the library's. */
+const knownThemes = () => [...themeNames, ...Object.keys(library.themes)]
+
 function loadAutosave() {
   try {
     const json = localStorage.getItem(STORAGE_KEY)
-    return json ? normalizeDesign(JSON.parse(json), themeNames) : null
+    return json ? normalizeDesign(JSON.parse(json), knownThemes()) : null
   } catch {
     return null
   }
@@ -39,6 +44,11 @@ class Store {
   selectedId = $state(null)
 
   selected = $derived(this.design.frames.find((f) => f.id === this.selectedId) ?? null)
+
+  /** The library themes the design uses (built-ins come from protokuda.css). */
+  customThemes = $derived(
+    usedThemes(this.design).flatMap((name) => (themeNames.includes(name) ? [] : library.themes[name] ?? [])),
+  )
 
   history = new History()
 
@@ -100,20 +110,36 @@ class Store {
     return frame
   }
 
+  /** The design file carries copies of its custom themes, so it opens anywhere. */
   saveJson() {
-    download(`${fileBaseName(this.design)}.json`, JSON.stringify(this.design, null, 2) + '\n', 'application/json')
+    const themes = Object.fromEntries(this.customThemes.map((t) => [t.name, t]))
+    const file = this.customThemes.length ? { ...this.design, themes } : this.design
+    download(`${fileBaseName(this.design)}.json`, JSON.stringify(file, null, 2) + '\n', 'application/json')
   }
 
-  /** @param {File} file */
+  /**
+   * Open a design file. Themes it carries that the library lacks are added to the library;
+   * where the library has a theme by the same name, the library's wins.
+   * @param {File} file
+   * @returns {Promise<{ added: string[], differed: string[] }>}
+   */
   async openJson(file) {
-    this.replace(normalizeDesign(JSON.parse(await file.text()), themeNames))
+    const raw = JSON.parse(await file.text())
+    normalizeDesign(raw) // throws if it isn't a design, before the library changes
+    const merged = library.merge(raw.themes)
+    this.replace(normalizeDesign(raw, knownThemes()))
+    return merged
   }
 
-  /** One zip with index.html and layout.css side by side, ready to unzip and open. */
+  /**
+   * One zip, ready to unzip and open: index.html and layout.css side by side, plus a
+   * `<name>.css` for each custom theme, since the CDN only has the built-in ones.
+   */
   exportZip() {
     const zip = zipSync({
-      'index.html': strToU8(indexHtml(this.design, { version })),
+      'index.html': strToU8(indexHtml(this.design, { version, themeFiles: this.customThemes.map((t) => t.name) })),
       'layout.css': strToU8(layoutCss(this.design)),
+      ...Object.fromEntries(this.customThemes.map((t) => [`${t.name}.css`, strToU8(classCss(t, version))])),
     })
     download(`${fileBaseName(this.design)}.zip`, zip, 'application/zip')
   }

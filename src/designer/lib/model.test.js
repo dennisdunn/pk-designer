@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   areaNameError, deleteFrame, fileBaseName, insertTrack, placeFrame, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
-  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame,
+  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame, usedThemes,
 } from './model.js'
 
 /** @type {(id: string, rect: import('./model.js').Rect) => import('./model.js').Frame} */
@@ -128,6 +128,15 @@ describe('design version', () => {
     expect(normalizeDesign(d).page.version).toBe(1)
     d.page.version = 7
     expect(normalizeDesign(d).page.version).toBe(7)
+  })
+})
+
+describe('usedThemes', () => {
+  it('lists the page theme, then frame themes, once each', () => {
+    const d = design()
+    d.frames[0].theme = 'ember'
+    d.frames[1].theme = 'ember'
+    expect(usedThemes(d)).toEqual(['greysmoke', 'ember'])
   })
 })
 

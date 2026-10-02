@@ -31,6 +31,11 @@ This repo was pk-designer; pk-themer was merged in with its history (its commits
   Antonio font (Protokuda doesn't import it; see below).
 - **Autosave** to `localStorage` (wrapped in try/catch). The keys (`pk-designer:design`, `pk-themer:theme`)
   predate the merge; keep them so existing autosaves carry over.
+- **Theme library.** The themer saves themes to a library (`pk-studio:themes` in localStorage, re-read
+  when another window changes it); the designer offers them beside the built-ins. Only hex and
+  `var(--pk-*)` values get in (`cleanTheme`), so library themes are safe in the preview's `<style>`.
+  Built-in names are reserved. A theme the library no longer has stays selected in a design, marked
+  "not in your library".
 - **Tooling:** Vite + Svelte 5 (runes). Vitest for the pure modules.
 
 ### Designer
@@ -48,7 +53,10 @@ This repo was pk-designer; pk-themer was merged in with its history (its commits
     sidebar items (text + `data-code`), status text;
   - `page`: page theme, `--pk-inner-radius`, other page-level tokens.
 - **Export:** `index.html` with one element per frame, plus `layout.css` with named `grid-template-areas`.
-- **Save/load** designs as `.json` files.
+- **Save/load** designs as `.json` files. A saved file carries copies of its library themes (`themes`,
+  by name), so it opens anywhere: Open adds the ones the library lacks; on a name clash the library's wins.
+- **Custom themes in exports** are `<name>.css` beside `index.html`, class-only (`classCss`), linked after
+  Protokuda. A `:root` theme file would turn the whole page that theme even when only one frame uses it.
 - **Frame content is placeholders only**: titles, labels, sidebar buttons and status text. Not arbitrary
   content inside frames; that's a page builder, not this app.
 
@@ -70,10 +78,8 @@ This repo was pk-designer; pk-themer was merged in with its history (its commits
 ## Plan
 
 Merging into Protokuda Studio, in steps. Done: 1 import pk-themer's history; 2–4 one app with a shell,
-one `virtual:protokuda`, shared history and UI CSS. Next:
+one `virtual:protokuda`, shared history and UI CSS; 5 the theme library. Next:
 
-5. **Theme library**: themer themes saved to a library and offered in the designer's theme pickers; a
-   designer export includes the `.css` of any custom theme it uses (jsDelivr can't serve those).
 6. **PWA** (`vite-plugin-pwa`): manifest with Designer/Themer shortcuts, offline precache including the
    Antonio font, prompt-to-update rather than swapping code mid-edit, `navigator.storage.persist()`.
 7. **Tablet**: `touch-action` on the canvas, 44px handles, File System Access save-in-place where available.
@@ -101,7 +107,8 @@ exact version for now); whether to inline the CSS as an export option.
 - `src/shared/`:
   - `route.svelte.js`: the current view, from the hash;
   - `Toolbar.svelte`: the studio header, the tool tabs and the status message; each tool fills in its buttons;
-  - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step.
+  - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step;
+  - `library.svelte.js`: the theme library's state (its pure helpers are `src/themer/lib/library.js`).
 
 **Designer** (`src/designer/`):
 - `Designer.svelte`: the tool's toolbar buttons, shortcuts and layout.
@@ -111,25 +118,30 @@ exact version for now); whether to inline the CSS as an export option.
 - `lib/gestures.js`: draw/move/resize/nudge as pure functions from cells to a rectangle.
 - `lib/tracks.js`: dragging the line between two tracks, keeping each track's unit.
 - `lib/store.svelte.js`: the design `$state` and editor state; components edit the design directly.
+  `customThemes` are the library themes the design uses: the preview injects their `classRule`s, Save
+  embeds them and Export writes them out.
 - Editing rule: frames and tracks change through `model.js` functions (`placeFrame`, `deleteFrame`,
   `insertTrack`, ...) called on `store.design`; plain fields are edited directly. The store holds only
   editor state (selection, history, files). A selected id may outlive its frame; `store.selected` is null then.
 - `components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
   positioned from the screen's computed `grid-template-columns/rows`.
+- `components/ThemeOptions.svelte`: a theme picker's options, built-in then library.
 
 **Themer** (`src/themer/`):
 - `Themer.svelte`: the tool's toolbar buttons, shortcuts and layout.
 - `lib/tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`,
   `valueKind()` says whether a value is unset, custom hex, a palette color, a token reference or other.
 - `lib/theme.js`: the `Theme` type and model operations: naming, `startFrom`, `completeTheme`.
-- `lib/css.js`: reading theme CSS (`parseTheme`, `paletteFrom`) and writing it (`themeCss`, `sourceCss`).
+- `lib/css.js`: reading theme CSS (`parseTheme`, `paletteFrom`) and writing it (`themeCss`, `sourceCss`,
+  and for the designer `classCss` and `classRule`).
+- `lib/library.js`: the library's pure helpers: `cleanTheme`, `readThemes`, `sameTheme`.
 - `lib/color.js`: resolving values to colors, cycle detection, contrast and `contrastChecks`.
 - `lib/readme.js` + `readme.md`: the export README; edit the Markdown, `{{key}}` placeholders are filled
   in by `readme()`, which throws on a placeholder it has no value for.
 - `lib/store.svelte.js`: the theme `$state`, derived contrast `checks`, preview options, autosave, open/export.
 - `lib/fixtures.js`: tests only; reads the installed package's built files.
-- `components/`: `Preview`, `ThemePanel` (label, name, version, start from, preview options),
-  `TokenRow`, `ContrastPanel`.
+- `components/`: `Preview`, `ThemePanel` (label, name, version, start from), `LibraryPanel` (save,
+  edit, delete), `PreviewPanel` (preview-only options), `TokenRow`, `ContrastPanel`.
 
 ## Protokuda 3.x reference
 

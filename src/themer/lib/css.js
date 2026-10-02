@@ -61,12 +61,37 @@ export function parseTheme(css, fallbackName = 'custom') {
  * @param {string} pkVersion  the Protokuda version it was made against
  */
 export function themeCss(theme, pkVersion) {
+  return layered(theme, pkVersion, `:root,\n  .pk-theme-${theme.name}`)
+}
+
+/**
+ * The theme as a class only, for linking beside protokuda.css without making it the page
+ * default: the designer's exports, where the page or a single frame opts in by class.
+ * Open reads it back like a theme file.
+ * @param {Theme} theme
+ * @param {string} pkVersion
+ */
+export function classCss(theme, pkVersion) {
+  return layered(theme, pkVersion, `.pk-theme-${theme.name}`)
+}
+
+/**
+ * Just the class rule, in Protokuda's theme layer: for a `<style>` in a live preview.
+ * No comment, so nothing from the label ends up in the page.
+ * @param {Theme} theme
+ */
+export function classRule(theme) {
+  return ['@layer protokuda.theme {', `  .pk-theme-${theme.name} {`, ...body(theme, '    '), '  }', '}', ''].join('\n')
+}
+
+/** @param {Theme} theme @param {string} pkVersion @param {string} selector */
+function layered(theme, pkVersion, selector) {
   return [
-    `/**\n${theme.label}\nVersion ${theme.version}\nMade with Protokuda Themer for Protokuda ${pkVersion}\n*/`,
+    `/**\n${comment(theme.label)}\nVersion ${theme.version}\nMade with Protokuda Themer for Protokuda ${pkVersion}\n*/`,
     '@layer protokuda.base, protokuda.theme, protokuda.state;',
     '',
     '@layer protokuda.theme {',
-    `  :root,\n  .pk-theme-${theme.name} {`,
+    `  ${selector} {`,
     ...body(theme, '    '),
     '  }',
     '}',
@@ -74,12 +99,15 @@ export function themeCss(theme, pkVersion) {
   ].join('\n')
 }
 
+/** Text that can't end the comment it sits in. @param {string} text */
+const comment = (text) => text.replace(/\*\//g, '* /')
+
 /**
  * The same theme in the protokuda repo's `src/themes/<name>.css` form, ready to add to the library.
  * @param {Theme} theme
  */
 export function sourceCss(theme) {
-  return [`/**\n${theme.label}\n*/`, `.pk-theme-${theme.name} {`, ...body(theme, '  '), '}', ''].join('\n')
+  return [`/**\n${comment(theme.label)}\n*/`, `.pk-theme-${theme.name} {`, ...body(theme, '  '), '}', ''].join('\n')
 }
 
 /** Declarations in schema order, with a blank line before the buttons, like the library's themes. */

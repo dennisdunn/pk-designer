@@ -5,6 +5,7 @@
   // real protokuda.css. Over it sits a "guides" layer positioned from the measured grid:
   // empty-cell outlines, frame hit boxes with resize handles, and track separators.
   import { EDGES, drawRect, moveRect, nudgeRect, resizeRect, trackAt } from '../lib/gestures.js'
+  import { classRule } from '../../themer/lib/css.js'
   import { layoutCss, screenMarkup } from '../lib/markup.js'
   import { deleteFrame, frameAtCell, placeFrame, splitTracks } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
@@ -27,7 +28,9 @@
   let draft = $state(null)
 
   const design = $derived(store.design)
-  const styleTag = $derived(`<style>${layoutCss(design, { scope: '.pv' })}</style>`)
+  // Library themes aren't in protokuda.css, so their class rules come along. Their values are
+  // checked when they enter the library (only hex and `var(--pk-*)`), so they're safe here.
+  const styleTag = $derived(`<style>${store.customThemes.map(classRule).join('')}${layoutCss(design, { scope: '.pv' })}</style>`)
   const markup = $derived(screenMarkup(design, { preview: true }))
   const measured = $derived(m.cols.length === design.grid.columns.length && m.rows.length === design.grid.rows.length)
 

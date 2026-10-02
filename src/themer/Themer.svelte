@@ -1,7 +1,9 @@
 <script>
   import Toolbar from '../shared/Toolbar.svelte'
   import ContrastPanel from './components/ContrastPanel.svelte'
+  import LibraryPanel from './components/LibraryPanel.svelte'
   import Preview from './components/Preview.svelte'
+  import PreviewPanel from './components/PreviewPanel.svelte'
   import ThemePanel from './components/ThemePanel.svelte'
   import TokenRow from './components/TokenRow.svelte'
   import { store } from './lib/store.svelte.js'
@@ -84,6 +86,8 @@
   <Preview />
   <aside class="inspector" aria-label="Inspector">
     <ThemePanel />
+    <LibraryPanel />
+    <PreviewPanel />
     {#each GROUPS as group (group.name)}
       <section class="panel" aria-labelledby="grp-{group.name}">
         <h2 id="grp-{group.name}">{group.name}</h2>

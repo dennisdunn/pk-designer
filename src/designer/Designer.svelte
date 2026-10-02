@@ -40,8 +40,12 @@
     e.currentTarget.value = ''
     if (!file) return
     try {
-      await store.openJson(file)
-      message = `Opened ${file.name}.`
+      const { added, differed } = await store.openJson(file)
+      message = [
+        `Opened ${file.name}.`,
+        added.length && `Added ${added.join(', ')} to your theme library.`,
+        differed.length && `${differed.join(', ')} differ${differed.length === 1 ? 's' : ''} from your library's; using your library's.`,
+      ].filter(Boolean).join(' ')
     } catch (err) {
       message = `Couldn't open ${file.name}: ${err instanceof Error ? err.message : err}`
     }

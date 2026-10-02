@@ -22,6 +22,29 @@
   gap: 0.4rem;
 }
 
+/* The library: one row per saved theme, the open one marked. */
+.library {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.library li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.3rem;
+  align-items: center;
+  padding: 0.3rem 0 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--ui-line);
+  border-left: 3px solid transparent;
+}
+.library li.open {
+  border-left-color: var(--ui-primary);
+}
+.library .name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* A token: swatch, label, then its value. */
 .token {
   display: grid;

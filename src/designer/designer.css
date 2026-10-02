@@ -53,11 +53,6 @@ p.hint.panel {
   cursor: default;
 }
 
-.inspector button.danger {
-  color: var(--ui-on-danger);
-  background: var(--ui-danger);
-}
-
 .inspector .rect {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

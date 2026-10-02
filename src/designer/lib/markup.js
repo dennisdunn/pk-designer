@@ -99,8 +99,14 @@ export function layoutCss(design, { scope = '' } = {}) {
   return out.join('\n') + '\n'
 }
 
-/** index.html for export. Links Protokuda at exactly `version`, the Antonio font and layout.css. */
-export function indexHtml(design, { version }) {
+/**
+ * index.html for export. Links the Antonio font, Protokuda at exactly `version`, a `<name>.css`
+ * for each theme in `themeFiles` (the custom ones, which the CDN doesn't have) and layout.css.
+ * @param {import('./model.js').Design} design
+ * @param {{ version: string, themeFiles?: string[] }} options
+ */
+export function indexHtml(design, { version, themeFiles = [] }) {
+  const themeLinks = themeFiles.map((name) => `    <link rel="stylesheet" href="${esc(name)}.css" />\n`).join('')
   const theme = design.page.theme ? ` class="pk-theme-${esc(design.page.theme)}"` : ''
   return `<!doctype html>
 <html lang="en"${theme}>
@@ -111,7 +117,7 @@ export function indexHtml(design, { version }) {
     <title>${esc(design.page.title || 'Protokuda screen')}</title>
     <link rel="stylesheet" href="${FONT_URL}" />
     <link rel="stylesheet" href="${cdnUrl(version)}" />
-    <link rel="stylesheet" href="layout.css" />
+${themeLinks}    <link rel="stylesheet" href="layout.css" />
   </head>
   <body>
 ${screenMarkup(design, { indent: '    ' })}

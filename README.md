@@ -3,6 +3,7 @@
  > them as HTML, CSS and theme files.
 
 Two tools in one app; switch between them with the tabs at the top. Each keeps its work while you switch.
+Themes you save to your library in the themer show up in the designer's theme pickers.
 
 - [Open the designer](https://dennisdunn.github.io/pk-designer/)
 - [Open the themer](https://dennisdunn.github.io/pk-themer/)
@@ -35,12 +36,15 @@ each frame's empty `pk-content` element after export.
 
 - **New** starts an empty design: one column, one row, no frames.
 - **Save / Open:** the design as `<title>-v<version>.json`. The designer also autosaves to the browser's
-  local storage, so a reload picks up where you left off.
+  local storage, so a reload picks up where you left off. A saved design carries copies of the library
+  themes it uses; opening it adds any your library doesn't have (where both have a theme by that name,
+  yours wins).
 - **Export:** `<title>-v<version>.zip` containing
   - `index.html`: a `<main class="pk-screen">` with one element per frame, `id` set to its area name.
     It links the Antonio font, Protokuda from jsDelivr pinned to the exact version the designer uses (so it
     looks like the preview), and `layout.css`.
   - `layout.css`: the page tokens, the grid tracks and areas, and one `grid-area` rule per frame.
+  - `<name>.css` for each library theme the design uses, linked from `index.html`.
 
 The design version is a plain counter: press **Next version** in the Page panel when you want a new one.
 It goes into the filenames and a `<meta name="version">` in the exported HTML.
@@ -73,6 +77,9 @@ exports a theme file that drops in beside the library.
   - `README.md`: how to use the theme, with Protokuda links pinned to that version.
 - **Version** is a plain counter: press **Next version** in the Theme panel when you want a new one.
 - **Copy source** copies the theme in the library's `src/themes/<name>.css` form, for adding it to Protokuda.
+- **Library:** **Save to library** keeps the theme in your browser for the designer's theme pickers; the
+  panel says whether the open theme has changed since. **Edit** opens a saved theme, **Delete** (pressed
+  twice) removes it. Built-in theme names are reserved.
 
 ## Development
 

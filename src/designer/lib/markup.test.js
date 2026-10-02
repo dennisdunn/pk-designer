@@ -46,6 +46,13 @@ describe('export', () => {
     expect(html).not.toContain('style=')
   })
 
+  it('links custom theme files after protokuda and before layout.css', () => {
+    const html = indexHtml(d, { version: '9.8.7', themeFiles: ['ember'] })
+    const at = (s) => html.indexOf(s)
+    expect(at('href="ember.css"')).toBeGreaterThan(at('protokuda.min.css'))
+    expect(at('href="ember.css"')).toBeLessThan(at('href="layout.css"'))
+  })
+
   it('renders frame classes and placeholder content, escaping text', () => {
     const e = structuredClone(d)
     const nav = frameNamed(e, 'nav')

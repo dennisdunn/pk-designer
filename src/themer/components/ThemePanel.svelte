@@ -1,5 +1,5 @@
 <script>
-  // The theme's name and label, a starting point, and the preview options.
+  // The theme's name and label, its version, and a starting point.
   import { store, themes } from '../lib/store.svelte.js'
   import { fileBaseName, isValidName, nameFor } from '../lib/theme.js'
 
@@ -91,17 +91,4 @@
     {failing === 0 ? '✓ All contrast checks pass.' : `✗ ${failing} contrast ${failing === 1 ? 'check fails' : 'checks fail'}.`}
     <a href="#ins-contrast-heading">Contrast</a>
   </p>
-</section>
-
-<section class="panel" aria-labelledby="ins-preview-heading">
-  <h2 id="ins-preview-heading">Preview</h2>
-  <div class="field">
-    <label for="ins-radius">Inner radius <output for="ins-radius">{store.preview.innerRadius}rem</output></label>
-    <input id="ins-radius" type="range" min="0" max="3" step="0.25" bind:value={store.preview.innerRadius} />
-  </div>
-  <label class="choice">
-    <input type="checkbox" bind:checked={store.preview.alert} />
-    Alert (whole screen)
-  </label>
-  <p class="help">Preview settings only; they aren't part of the theme.</p>
 </section>
