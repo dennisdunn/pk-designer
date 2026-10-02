@@ -1,5 +1,9 @@
 <script>
+  import { takeFile } from '../shared/files.js'
   import { launch } from '../shared/launch.svelte.js'
+  import { undoShortcuts } from '../shared/shortcuts.js'
+  import { fileBaseName } from '../shared/theme/theme.js'
+  import { GROUPS } from '../shared/theme/tokens.js'
   import Toolbar from '../shared/Toolbar.svelte'
   import ContrastPanel from './components/ContrastPanel.svelte'
   import LibraryPanel from './components/LibraryPanel.svelte'
@@ -8,8 +12,6 @@
   import ThemePanel from './components/ThemePanel.svelte'
   import TokenRow from './components/TokenRow.svelte'
   import { store } from './lib/store.svelte.js'
-  import { fileBaseName } from '../shared/theme/theme.js'
-  import { GROUPS } from '../shared/theme/tokens.js'
 
   let fileInput
   let message = $state('')
@@ -17,22 +19,6 @@
   $effect(() => {
     store.changed()
   })
-
-  // Undo/redo shortcuts, except in text fields, which keep their own native undo.
-  const TEXT_FIELD = 'textarea, [contenteditable], input:not([type=checkbox], [type=radio], [type=range], [type=file], [type=color])'
-
-  function shortcuts(e) {
-    if (!(e.metaKey || e.ctrlKey) || e.altKey || e.target.matches?.(TEXT_FIELD)) return
-    const key = e.key.toLowerCase()
-    if (key === 'z') {
-      e.preventDefault()
-      if (e.shiftKey) store.redo()
-      else store.undo()
-    } else if (key === 'y' && e.ctrlKey) {
-      e.preventDefault()
-      store.redo()
-    }
-  }
 
   // A theme file opened with the installed app.
   $effect(() => {
@@ -43,8 +29,7 @@
   })
 
   function inputChanged(e) {
-    const file = e.currentTarget.files?.[0]
-    e.currentTarget.value = ''
+    const file = takeFile(e)
     if (file) openFile(file)
   }
 
@@ -73,7 +58,7 @@
   }
 </script>
 
-<svelte:window onkeydown={shortcuts} />
+<svelte:window onkeydown={undoShortcuts(store)} />
 <svelte:head><title>Themer · Protokuda Studio</title></svelte:head>
 
 <Toolbar {message}>

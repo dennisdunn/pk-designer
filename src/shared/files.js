@@ -18,6 +18,19 @@ export const hasFileAccess = 'showOpenFilePicker' in fsa && 'showSaveFilePicker'
 const cancelled = (err) => err instanceof DOMException && err.name === 'AbortError'
 
 /**
+ * The file chosen in a file input, clearing the input so that choosing the same file again still
+ * fires `change`. For an input's `onchange`.
+ * @param {Event} e
+ * @returns {File | null}
+ */
+export function takeFile(e) {
+  const input = /** @type {HTMLInputElement} */ (e.currentTarget)
+  const file = input.files?.[0] ?? null
+  input.value = ''
+  return file
+}
+
+/**
  * Ask for a file with the system picker. Returns null if the user cancels.
  * Only where `hasFileAccess`; elsewhere use a file input.
  * @param {FileType} type

@@ -2,15 +2,15 @@
 // The theme file is the save format, so Open reads the same CSS that Export writes.
 
 import { strToU8, zipSync } from 'fflate'
-import { untrack } from 'svelte'
 // `version` is the Protokuda package's; `pkVersion` keeps it apart from a theme's own version.
 import { defaultTheme, palette, themes, version as pkVersion } from 'virtual:protokuda'
-import { contrastChecks } from './color.js'
-import { parseTheme, sourceCss, themeCss } from '../../shared/theme/css.js'
+import { autosave, loadAutosave } from '../../shared/autosave.js'
 import { download } from '../../shared/files.js'
 import { History } from '../../shared/history.svelte.js'
-import { readme } from './readme.js'
+import { parseTheme, sourceCss, themeCss } from '../../shared/theme/css.js'
 import { completeTheme, fileBaseName, isValidName, startFrom } from '../../shared/theme/theme.js'
+import { contrastChecks } from './color.js'
+import { readme } from './readme.js'
 
 /** @typedef {import('../../shared/theme/theme.js').Theme} Theme */
 
@@ -21,22 +21,15 @@ const BASE = themes[defaultTheme].tokens
 /** The first theme a new visitor sees. */
 const FIRST = themes.goldentanoi ?? Object.values(themes)[0]
 
-/** @returns {Theme | null} */
-function loadAutosave() {
-  try {
-    const json = localStorage.getItem(STORAGE_KEY)
-    if (!json) return null
-    const t = JSON.parse(json)
-    if (!isValidName(t.name) || typeof t.label !== 'string' || typeof t.tokens !== 'object') return null
-    return completeTheme(t, BASE)
-  } catch {
-    return null
-  }
+/** An autosaved theme, if it still looks like one. @returns {Theme | null} */
+function readAutosave(/** @type {any} */ t) {
+  if (!isValidName(t.name) || typeof t.label !== 'string' || typeof t.tokens !== 'object') return null
+  return completeTheme(t, BASE)
 }
 
 class Store {
   /** @type {Theme} */
-  theme = $state(loadAutosave() ?? startFrom(FIRST))
+  theme = $state(loadAutosave(STORAGE_KEY, readAutosave) ?? startFrom(FIRST))
 
   checks = $derived(contrastChecks(this.theme, palette))
   failing = $derived(this.checks.filter((c) => !c.pass).length)
@@ -48,15 +41,7 @@ class Store {
 
   /** Call from an effect: reads the whole theme, so it runs on every change. */
   changed() {
-    const json = JSON.stringify(this.theme)
-    untrack(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, json)
-      } catch {
-        // Private window or storage full: autosave is a convenience, carry on without it.
-      }
-      this.history.note(json)
-    })
+    autosave(STORAGE_KEY, JSON.stringify(this.theme), this.history)
   }
 
   undo() {

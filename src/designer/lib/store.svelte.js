@@ -2,8 +2,8 @@
 // Frames and tracks are edited with the functions in model.js, called on `store.design`.
 
 import { strToU8, zipSync } from 'fflate'
-import { untrack } from 'svelte'
 import { themeNames, version } from 'virtual:protokuda'
+import { autosave, loadAutosave } from '../../shared/autosave.js'
 import { download, saveFile } from '../../shared/files.js'
 import { History } from '../../shared/history.svelte.js'
 import { library } from '../../shared/library.svelte.js'
@@ -21,20 +21,11 @@ const STORAGE_KEY = 'pk-designer:design'
 /** Theme names a design may use: the package's and the library's. */
 const knownThemes = () => [...themeNames, ...Object.keys(library.themes)]
 
-function loadAutosave() {
-  try {
-    const json = localStorage.getItem(STORAGE_KEY)
-    return json ? normalizeDesign(JSON.parse(json), knownThemes()) : null
-  } catch {
-    return null
-  }
-}
-
 /** For the file pickers. @type {import('../../shared/files.js').FileType} */
 export const DESIGN_FILE = { description: 'Protokuda Studio design', accept: { 'application/json': ['.json'] } }
 
 class Store {
-  design = $state(loadAutosave() ?? starterDesign())
+  design = $state(loadAutosave(STORAGE_KEY, (raw) => normalizeDesign(raw, knownThemes())) ?? starterDesign())
   /** @type {string | null} */
   selectedId = $state(null)
 
@@ -55,15 +46,7 @@ class Store {
 
   /** Call from an effect: reads the whole design, so it runs on every change. */
   changed() {
-    const json = JSON.stringify(this.design)
-    untrack(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, json)
-      } catch {
-        // Private window or storage full: autosave is a convenience, carry on without it.
-      }
-      this.history.note(json)
-    })
+    autosave(STORAGE_KEY, JSON.stringify(this.design), this.history)
   }
 
   undo() {

@@ -1,7 +1,7 @@
 <script>
   // The theme's name and label, its version, and a starting point.
-  import { store, themes } from '../lib/store.svelte.js'
   import { fileBaseName, isValidName, nameFor } from '../../shared/theme/theme.js'
+  import { store, themes } from '../lib/store.svelte.js'
 
   const theme = $derived(store.theme)
   const failing = $derived(store.failing)

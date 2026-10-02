@@ -1,6 +1,7 @@
 <script>
-  import { hasFileAccess, pickFile } from '../shared/files.js'
+  import { hasFileAccess, pickFile, takeFile } from '../shared/files.js'
   import { launch } from '../shared/launch.svelte.js'
+  import { undoShortcuts } from '../shared/shortcuts.js'
   import Toolbar from '../shared/Toolbar.svelte'
   import Canvas from './components/Canvas.svelte'
   import FramePanel from './components/FramePanel.svelte'
@@ -23,22 +24,6 @@
     openFile(waiting.file, waiting.handle)
   })
 
-  // Undo/redo shortcuts, except in text fields, which keep their own native undo.
-  const TEXT_FIELD = 'textarea, [contenteditable], input:not([type=checkbox], [type=radio], [type=range], [type=file])'
-
-  function shortcuts(e) {
-    if (!(e.metaKey || e.ctrlKey) || e.altKey || e.target.matches?.(TEXT_FIELD)) return
-    const key = e.key.toLowerCase()
-    if (key === 'z') {
-      e.preventDefault()
-      if (e.shiftKey) store.redo()
-      else store.undo()
-    } else if (key === 'y' && e.ctrlKey) {
-      e.preventDefault()
-      store.redo()
-    }
-  }
-
   // No confirm(): New is undoable, and some browsers block dialogs (which would make New do nothing).
   function newDesign() {
     store.replace(emptyDesign())
@@ -57,8 +42,7 @@
   }
 
   function inputChanged(e) {
-    const file = e.currentTarget.files?.[0]
-    e.currentTarget.value = ''
+    const file = takeFile(e)
     if (file) openFile(file)
   }
 
@@ -93,7 +77,7 @@
   }
 </script>
 
-<svelte:window onkeydown={shortcuts} />
+<svelte:window onkeydown={undoShortcuts(store)} />
 <svelte:head><title>Designer · Protokuda Studio</title></svelte:head>
 
 <Toolbar {message}>

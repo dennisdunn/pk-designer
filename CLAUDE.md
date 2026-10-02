@@ -122,9 +122,13 @@ exact version for now); whether to inline the CSS as an export option.
   - `Toolbar.svelte`: the studio header, the tool tabs, the status message and the update notice; each
     tool fills in its buttons;
   - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step;
+  - `autosave.js`: `loadAutosave` and `autosave` (save to localStorage, note in the history), which both
+    stores' `changed()` use;
+  - `shortcuts.js`: `undoShortcuts(store)`, the undo/redo keys for `<svelte:window>`, with the one list of
+    fields that keep their own native undo;
   - `library.svelte.js`: the theme library's state (its pure helpers are `theme/library.js`);
   - `pwa.svelte.js`: service worker registration, the update/offline notice state, persistent storage;
-  - `files.js`: `pickFile`, `saveFile` (in place where possible) and `download`;
+  - `files.js`: `pickFile`, `saveFile` (in place where possible), `download`, and `takeFile` for file inputs;
   - `launch.svelte.js`: files opened with the installed app, waiting for the view that opens them;
   - `theme/`, the theme model both tools use, with its tests:
     - `tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`, `valueKind()`
