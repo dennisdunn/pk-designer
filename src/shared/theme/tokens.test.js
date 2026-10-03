@@ -13,9 +13,7 @@ describe('schema', () => {
   it("lists geometry tokens protokuda.css reads", () => {
     const css = pkg('protokuda.css')
     const geometry = TOKENS.filter((t) => t.kind === 'length').map((t) => t.name)
-    // --pk-elbow-radius and --pk-end-radius arrive with a newer package; the themer hides them until then.
-    const newer = new Set(['--pk-elbow-radius', '--pk-end-radius'])
-    for (const name of geometry) if (!newer.has(name)) expect(css, name).toContain(`var(${name}`)
+    for (const name of geometry) expect(css, name).toContain(`var(${name}`)
   })
 })
 

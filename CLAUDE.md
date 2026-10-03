@@ -267,8 +267,8 @@ Typical frame:
 - **Geometry:**
   - `--pk-frame-line` (3px), `--pk-frame-bar` (0.5rem), `--pk-frame-side` (1.1rem);
   - `--pk-frame-radius` (2rem), `--pk-sidebar-width` (5rem), `--pk-statusline-height` (2rem);
-  - `--pk-elbow-radius` and `--pk-end-radius` (protokuda's `corner-radii` branch, not yet released):
-    the outer corners on the elbow side and the far side, both following `--pk-frame-radius` when unset;
+  - `--pk-elbow-radius` and `--pk-end-radius` (3.1+): the outer corners on the elbow side and the far
+    side, both following `--pk-frame-radius` when unset;
   - `--pk-inner-radius` (0rem = square proto elbows; ~1.5rem = LCARS curve; needs a unit; applies
     to `pk-std` and `pk-partial` only).
 - **Type:** `--pk-sans-font-family`, `--pk-mono-font-family`, `--pk-letter-spacing` (0.06em).
