@@ -62,11 +62,24 @@ describe('saveFile with File System Access', () => {
     expect(await saveFile({ name: 'a.json', data: 'x', type: TYPE }, api(cancel))).toBeNull()
   })
 
+  it('downloads instead when the browser refuses the picker or the write', async () => {
+    const link = { click: vi.fn(), remove: vi.fn() }
+    vi.stubGlobal('document', { createElement: () => link, body: { append: vi.fn() } })
+    const refuse = (/** @type {string} */ kind) => () => {
+      throw new DOMException('The request is not allowed.', kind)
+    }
+    expect(await saveFile({ name: 'a.json', data: 'x', type: TYPE }, api(refuse('NotAllowedError')))).toBeUndefined()
+    const noWrite = { ...handle('b.json'), createWritable: refuse('SecurityError') }
+    expect(await saveFile({ name: 'b.json', data: 'x', type: TYPE, handle: noWrite }, api())).toBeUndefined()
+    expect(link.click).toHaveBeenCalledTimes(2)
+    expect(link).toMatchObject({ download: 'b.json' })
+  })
+
   it('passes other errors on', async () => {
     const fail = () => {
-      throw new DOMException('Not allowed.', 'NotAllowedError')
+      throw new DOMException('Disk full.', 'QuotaExceededError')
     }
-    await expect(saveFile({ name: 'a.json', data: 'x', type: TYPE }, api(fail))).rejects.toThrow('Not allowed.')
+    await expect(saveFile({ name: 'a.json', data: 'x', type: TYPE }, api(fail))).rejects.toThrow('Disk full.')
   })
 })
 

@@ -77,7 +77,7 @@
   async function save() {
     try {
       const saved = await project.save()
-      if (saved) status.message = `Saved ${saved}.`
+      if (saved) status.message = saved.downloaded ? `Downloaded ${saved.name}.` : `Saved ${saved.name}.`
     } catch (err) {
       status.message = `Couldn't save: ${errorText(err)}`
     }

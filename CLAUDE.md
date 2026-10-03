@@ -67,7 +67,8 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
 - **Files:** where the browser has File System Access (Chromium on desktop), Open keeps a handle and
   Save writes back to the same file while its name (`<title>-v<version>.json`) still matches; a
   new title or version asks where to save. Elsewhere (Safari, Firefox, iPad) Open uses a file input and
-  Save downloads. Installed, "Open with" takes `.json` projects and `.css` themes (`file_handlers`).
+  Save downloads; so does a browser that offers File System Access but refuses this page the picker or
+  the write (`NotAllowedError`/`SecurityError`, e.g. an embedded browser). Installed, "Open with" takes `.json` projects and `.css` themes (`file_handlers`).
 - **Toolbar:** the textmark with the project's title and version under it, then one row of buttons:
   the tool tabs, New/Open/Save/Export, then the open tool's group: Undo and Redo first (rendered by
   `Toolbar.svelte` from the tool's store), then the tool's own buttons (the designer's Add frame). The

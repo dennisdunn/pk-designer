@@ -124,15 +124,18 @@ class Project {
 
   /**
    * Save as `<title>-v<version>.json`. Writes back to the open file while the name still matches;
-   * a new title or version asks where to put the new file. Returns the name written, or null if
-   * it was downloaded or cancelled.
+   * a new title or version asks where to put the new file. Where the browser can't or won't write
+   * files, it's downloaded. Returns the file's name and whether it was downloaded, or null if
+   * the user cancelled.
+   * @returns {Promise<{ name: string, downloaded: boolean } | null>}
    */
   async save() {
     const name = `${this.baseName}.json`
     const data = JSON.stringify(this.toJSON(), null, 2) + '\n'
     const handle = await saveFile({ name, data, type: PROJECT_FILE, handle: this.fileHandle })
+    if (handle === null) return null
     if (handle) this.fileHandle = handle
-    return handle ? handle.name : null
+    return { name: handle ? handle.name : name, downloaded: !handle }
   }
 
   /**

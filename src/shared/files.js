@@ -25,6 +25,13 @@ export const hasFileAccess = supports(browser)
 const cancelled = (err) => err instanceof DOMException && err.name === 'AbortError'
 
 /**
+ * The browser offered File System Access but won't let this page use it (an embedded browser, a
+ * policy, a sandboxed frame): Save downloads instead.
+ * @param {unknown} err
+ */
+const refused = (err) => err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'SecurityError')
+
+/**
  * The file chosen in a file input, clearing the input so that choosing the same file again still
  * fires `change`. For an input's `onchange`.
  * @param {Event} e
@@ -57,7 +64,8 @@ export async function pickFile(type, api = browser) {
 /**
  * Save `data` as `name`. With File System Access: back to `handle` if it's that same file name,
  * else through the save picker; returns the handle written to, or null if the user cancelled.
- * Without it, downloads and returns undefined.
+ * Without it, or when the browser refuses to let the page pick or write the file, downloads and
+ * returns undefined.
  * @param {{ name: string, data: BlobPart, type: FileType, handle?: FileHandle | null }} file
  * @param {FileAccess} [api]
  * @returns {Promise<FileHandle | null | undefined>}
@@ -78,7 +86,9 @@ export async function saveFile({ name, data, type, handle = null }, api = browse
     return target
   } catch (err) {
     if (cancelled(err)) return null
-    throw err
+    if (!refused(err)) throw err
+    download(name, data, mime)
+    return undefined
   }
 }
 
