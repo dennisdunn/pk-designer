@@ -68,9 +68,11 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
   Save writes back to the same file while its name (`<title>-v<version>.json`) still matches; a
   new title or version asks where to save. Elsewhere (Safari, Firefox, iPad) Open uses a file input and
   Save downloads. Installed, "Open with" takes `.json` projects and `.css` themes (`file_handlers`).
-- **Toolbar:** global on the left (project title and version, New/Open/Save/Export), then the tool tabs
-  joined to the open tool's group: Undo and Redo first (rendered by `Toolbar.svelte` from the tool's
-  store), then the tool's own buttons (the designer's Add frame).
+- **Toolbar:** the textmark with the project's title and version under it, then one row of buttons:
+  the tool tabs, New/Open/Save/Export, then the open tool's group: Undo and Redo first (rendered by
+  `Toolbar.svelte` from the tool's store), then the tool's own buttons (the designer's Add frame). The
+  status and update messages sit in a strip under the buttons that keeps its height while empty. The
+  buttons fit one row from about 1200px wide; mind that when adding any.
 - **Touch and tablets:** the canvas takes every touch for drawing (`touch-action: none`), so it must never
   need scrolling sideways: below 52rem the designer stacks the inspector under a full-width canvas. On
   coarse pointers, handles and track lines get ~44px hit areas; with no hover, the lines stay visible.
@@ -145,7 +147,7 @@ exact version for now); whether to inline the CSS as an export option.
     its layout. These load globally too, so every rule starts with `.designer` / `.themer` (the tool's `<main>`).
 - `src/shared/`:
   - `route.svelte.js`: the current view, from the hash;
-  - `Toolbar.svelte`: the studio header: project title and version, New/Open/Save/Export, the tool tabs,
+  - `Toolbar.svelte`: the studio header: project title and version, the tool tabs, New/Open/Save/Export,
     Undo/Redo for the open tool, the status message and the update notice; each tool adds its buttons;
   - `project.svelte.js`: the project: its file format, New/Open/Save/Export and autosave. The designer
     registers its part (`setDesign`), so this never imports a tool;

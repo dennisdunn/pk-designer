@@ -1,8 +1,7 @@
 <script>
-  // The studio header. Left: the textmark with the project's title and version under it, then
-  // New, Open, Save and Export, which act on the whole project. Then the tool tabs, attached to the
-  // open tool's own group: Undo and Redo always first, in the same place in every tool, then the
-  // tool's buttons. Stacking the project under the textmark keeps every button on one line, and
+  // The studio header. Left: the textmark with the project's title and version under it, then the
+  // tool tabs, then New, Open, Save and Export, which act on the whole project, then the open tool's
+  // own group: Undo and Redo always first, in the same place in every tool, then the tool's buttons. Stacking the project under the textmark keeps every button on one line, and
   // leaves room under the buttons for the status and update messages.
   import { onMount } from 'svelte'
   import { version as pkVersion } from 'virtual:protokuda'
@@ -108,6 +107,15 @@
   </div>
 
   <div class="actions">
+    <nav class="tabs" aria-label="Tool">
+      {#each TOOLS as tool (tool.view)}
+        {#if route.view === tool.view}
+          <a bind:this={current} href="#/{tool.view}" aria-current="page" data-code={tool.code}>{tool.label}</a>
+        {:else}
+          <a href="#/{tool.view}" data-code={tool.code}>{tool.label}</a>
+        {/if}
+      {/each}
+    </nav>
     <div class="global">
       <nav aria-label="Project file">
         <button type="button" data-code="01-0001" onclick={newProject}>New</button>
@@ -120,15 +128,6 @@
     </div>
 
     <div class="tool">
-      <nav class="tabs" aria-label="Tool">
-        {#each TOOLS as tool (tool.view)}
-          {#if route.view === tool.view}
-            <a bind:this={current} href="#/{tool.view}" aria-current="page" data-code={tool.code}>{tool.label}</a>
-          {:else}
-            <a href="#/{tool.view}" data-code={tool.code}>{tool.label}</a>
-          {/if}
-        {/each}
-      </nav>
       <nav aria-label="{toolLabel} edit">
         <button type="button" data-code="02-0001" aria-keyshortcuts="Control+Z Meta+Z" title="Undo (Ctrl/Cmd+Z)"
           disabled={!history.history.canUndo} onclick={() => history.undo()}>Undo</button>
