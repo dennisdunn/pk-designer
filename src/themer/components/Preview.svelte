@@ -1,14 +1,9 @@
 <script>
-  // A sample screen rendered with the real protokuda.css. The theme's tokens go on the
-  // stage as inline custom properties, which beat protokuda's layered defaults.
+  // A sample screen rendered with the real protokuda.css. The theme's tokens (colors and geometry)
+  // go on the stage as inline custom properties, which beat protokuda's layered defaults.
   import { store } from '../lib/store.svelte.js'
 
-  const style = $derived(
-    [
-      ...Object.entries(store.theme.tokens).map(([name, value]) => `${name}: ${value}`),
-      `--pk-inner-radius: ${store.preview.innerRadius}rem`,
-    ].join('; '),
-  )
+  const style = $derived(Object.entries(store.theme?.tokens ?? {}).map(([name, value]) => `${name}: ${value}`).join('; '))
 
   const SWATCHES = ['primary', 'secondary', 'accent'].map((role) => ({
     role,

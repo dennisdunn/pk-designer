@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { rootDeclarations } from '../../shared/theme/css.js'
-import { pkg } from '../../shared/theme/fixtures.js'
 import {
-  areaNameError, deleteFrame, fileBaseName, insertTrack, placeFrame, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
-  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame, usedThemes, PAGE_TOKENS, DEFAULT_INNER_RADIUS,
+  areaNameError, deleteFrame, insertTrack, placeFrame, isValidTrack, normalizeDesign, rectFits, removeTrack, setTracks,
+  splitTracks, starterDesign, emptyDesign, MODEL_VERSION, newFrame, usedThemes, legacyTokens,
 } from './model.js'
 
 /** @type {(id: string, rect: import('./model.js').Rect) => import('./model.js').Frame} */
@@ -16,7 +14,7 @@ const frame = (id, rect) => ({ ...newFrame({ frames: [] }, rect), id, area: id }
 const design = () => ({
   version: MODEL_VERSION,
   grid: { columns: ['1fr', '1fr', '1fr'], rows: ['1fr', '1fr'] },
-  page: { title: 't', version: 1, theme: 'greysmoke', alert: false, tokens: {} },
+  page: { title: 't', version: 1, theme: 'greysmoke', alert: false },
   frames: [frame('a', { x: 0, y: 0, w: 2, h: 1 }), frame('b', { x: 2, y: 0, w: 1, h: 2 })],
 })
 
@@ -104,7 +102,7 @@ describe('normalizeDesign', () => {
     }, ['greysmoke'])
     expect(n.grid.columns).toEqual(['1fr', '1fr'])
     expect(n.page.theme).toBe('greysmoke')
-    expect(n.page.tokens).toEqual({})
+    expect('tokens' in n.page).toBe(false)
     expect(n.frames).toHaveLength(1)
     expect(n.frames[0]).toMatchObject({ area: 'a', type: 'std', modifiers: ['mirror'] })
   })
@@ -114,14 +112,6 @@ describe('normalizeDesign', () => {
 })
 
 describe('design version', () => {
-  it('names files from the title and version', () => {
-    const d = starterDesign()
-    d.page.title = 'Main Bridge: Deck 1'
-    d.page.version = 3
-    expect(fileBaseName(d)).toBe('main-bridge-deck-1-v3')
-    d.page.title = '***'
-    expect(fileBaseName(d)).toBe('design-v3')
-  })
   it('defaults to 1 for older files and bad values', () => {
     const d = starterDesign()
     delete /** @type {any} */ (d.page).version
@@ -133,19 +123,11 @@ describe('design version', () => {
   })
 })
 
-describe('page tokens', () => {
-  it("are tokens protokuda.css's :root sets, with its values as placeholders", () => {
-    const root = rootDeclarations(pkg('protokuda.css'))
-    for (const t of PAGE_TOKENS) {
-      expect(root[t.name], t.name).toBeTruthy()
-      expect(t.placeholder).toBe(root[t.name])
-    }
-  })
-
-  it("take the inner radius default from protokuda.css's :root, in rem as the slider is", () => {
-    const value = rootDeclarations(pkg('protokuda.css'))['--pk-inner-radius']
-    expect(value).toMatch(/^\d*\.?\d+rem$/)
-    expect(DEFAULT_INNER_RADIUS).toBe(parseFloat(value))
+describe('legacy page tokens', () => {
+  it("reads an older design's page tokens, for moving into a theme", () => {
+    const raw = { page: { tokens: { '--pk-inner-radius': ' 1.5rem ', '--pk-frame-bar': '', bad: '1rem', '--pk-x': 3 } } }
+    expect(legacyTokens(raw)).toEqual({ '--pk-inner-radius': '1.5rem' })
+    expect(legacyTokens({})).toEqual({})
   })
 })
 
@@ -163,7 +145,7 @@ describe('emptyDesign', () => {
     const d = emptyDesign()
     expect(d.grid).toEqual({ columns: ['1fr'], rows: ['1fr'] })
     expect(d.frames).toEqual([])
-    expect(d.page).toMatchObject({ version: 1, theme: 'greysmoke', alert: false, tokens: {} })
+    expect(d.page).toMatchObject({ version: 1, theme: 'greysmoke', alert: false })
   })
   it('survives a save and load', () => {
     expect(normalizeDesign(JSON.parse(JSON.stringify(emptyDesign())))).toEqual(emptyDesign())

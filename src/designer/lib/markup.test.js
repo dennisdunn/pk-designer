@@ -21,9 +21,9 @@ describe('export', () => {
     expect(templateAreas(e)).toEqual(['"header header"', '"nav    main"', '"nav    ."'])
   })
 
-  it('writes layout.css with tokens, tracks and one grid-area rule per frame', () => {
+  it('writes layout.css with tracks and one grid-area rule per frame, and no tokens', () => {
     const css = layoutCss(d)
-    expect(css).toContain(':root {\n  --pk-inner-radius: 0rem;\n}')
+    expect(css).not.toContain('--pk-')
     expect(css).toContain('grid-template-columns: 14rem 1fr;')
     expect(css).toContain('#nav {\n  grid-area: nav;\n}')
     expect(css).not.toMatch(/style=/)
@@ -31,7 +31,6 @@ describe('export', () => {
 
   it('scopes the preview CSS and matches frames by data-area', () => {
     const css = layoutCss(d, { scope: '.pv' })
-    expect(css).toContain('.pv {\n  --pk-inner-radius')
     expect(css).toContain('.pv .pk-screen {')
     expect(css).toContain('.pv [data-area="nav"] {')
   })

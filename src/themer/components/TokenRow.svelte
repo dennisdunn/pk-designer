@@ -1,7 +1,7 @@
 <script>
   // One token: a palette color, another token, or a custom hex color.
   import { titleCase } from '../../shared/theme/theme.js'
-  import { TOKENS, bare, isHex, valueKind } from '../../shared/theme/tokens.js'
+  import { COLOR_TOKENS, bare, isHex, valueKind } from '../../shared/theme/tokens.js'
   import { resolve, wouldCycle } from '../lib/color.js'
   import { palette, store } from '../lib/store.svelte.js'
 
@@ -14,7 +14,7 @@
   const CUSTOM = '#custom'
   const OTHER = '#other'
 
-  const theme = $derived(store.theme)
+  const theme = $derived(/** @type {import('../../shared/theme/theme.js').Theme} */ (store.theme))
   const value = $derived(theme.tokens[token.name] ?? '')
   const kind = $derived(valueKind(value, palette))
   const color = $derived(resolve(theme, token.name, palette))
@@ -54,7 +54,7 @@
       {/each}
     </optgroup>
     <optgroup label="Theme tokens">
-      {#each TOKENS as t (t.name)}
+      {#each COLOR_TOKENS as t (t.name)}
         {#if t.name !== token.name}
           <option value="var({t.name})" disabled={wouldCycle(theme, token.name, t.name)}>{t.label} ({bare(t.name)})</option>
         {/if}

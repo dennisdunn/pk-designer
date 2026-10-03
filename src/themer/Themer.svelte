@@ -1,88 +1,56 @@
 <script>
-  import { takeFile } from '../shared/files.js'
-  import { launch } from '../shared/launch.svelte.js'
-  import { undoShortcuts } from '../shared/shortcuts.js'
-  import { fileBaseName } from '../shared/theme/theme.js'
-  import { GROUPS } from '../shared/theme/tokens.js'
   import Toolbar from '../shared/Toolbar.svelte'
+  import { undoShortcuts } from '../shared/shortcuts.js'
+  import { GROUPS } from '../shared/theme/tokens.js'
   import ContrastPanel from './components/ContrastPanel.svelte'
+  import GeometryRow from './components/GeometryRow.svelte'
   import LibraryPanel from './components/LibraryPanel.svelte'
   import Preview from './components/Preview.svelte'
   import PreviewPanel from './components/PreviewPanel.svelte'
   import ThemePanel from './components/ThemePanel.svelte'
+  import ThemesPanel from './components/ThemesPanel.svelte'
   import TokenRow from './components/TokenRow.svelte'
-  import { store } from './lib/store.svelte.js'
+  import { store, supported } from './lib/store.svelte.js'
 
-  let fileInput
-  let message = $state('')
-
-  $effect(() => {
-    store.changed()
-  })
-
-  // A theme file opened with the installed app.
-  $effect(() => {
-    const waiting = launch.theme
-    if (!waiting) return
-    launch.theme = null
-    openFile(waiting.file)
-  })
-
-  function inputChanged(e) {
-    const file = takeFile(e)
-    if (file) openFile(file)
-  }
-
-  /** @param {File} file */
-  async function openFile(file) {
-    try {
-      await store.openCss(file)
-      message = `Opened ${file.name}. Undo brings the previous theme back.`
-    } catch (err) {
-      message = `Couldn't open ${file.name}: ${err instanceof Error ? err.message : err}`
-    }
-  }
-
-  function exportZip() {
-    store.exportZip()
-    message = `Exported ${fileBaseName(store.theme)}.zip.`
-  }
+  // Geometry first: a theme is what the frames look like, shape as well as color.
+  const groups = [...GROUPS].sort((a, b) => Number(b.name === 'Geometry') - Number(a.name === 'Geometry'))
 </script>
 
 <svelte:window onkeydown={undoShortcuts(store)} />
 <svelte:head><title>Themer · Protokuda Studio</title></svelte:head>
 
-<Toolbar {message}>
-  <nav aria-label="Theme file">
-    <button type="button" data-code="01-0001" title="Open a theme .css file" onclick={() => fileInput.click()}>Open</button>
-    <input bind:this={fileInput} type="file" accept=".css,text/css" hidden onchange={inputChanged} />
-  </nav>
-  <nav aria-label="Edit">
-    <button type="button" data-code="02-0001" aria-keyshortcuts="Control+Z Meta+Z" title="Undo (Ctrl/Cmd+Z)"
-      disabled={!store.history.canUndo} onclick={() => store.undo()}>Undo</button>
-    <button type="button" data-code="02-0002" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
-      title="Redo (Shift+Ctrl/Cmd+Z)" disabled={!store.history.canRedo} onclick={() => store.redo()}>Redo</button>
-  </nav>
-  <nav aria-label="Export">
-    <button type="button" class="alt" data-code="03-0001" title="Download the theme .css and a README as a zip"
-      onclick={exportZip}>Export</button>
-  </nav>
-</Toolbar>
+<Toolbar history={store} />
 
 <main class="workspace themer">
-  <Preview />
+  {#if store.theme}
+    <Preview />
+  {:else}
+    <div class="stage empty">
+      <p>This project has no themes of its own yet. Start one from a built-in theme in <a href="#ins-themes-heading">Themes</a>.</p>
+    </div>
+  {/if}
   <aside class="inspector" aria-label="Inspector">
-    <ThemePanel />
+    <ThemesPanel />
+    {#if store.theme}
+      <ThemePanel />
+      {#each groups as group (group.name)}
+        <section class="panel" aria-labelledby="grp-{group.name}">
+          <h2 id="grp-{group.name}">{group.name}</h2>
+          {#if group.name === 'Geometry'}
+            <p class="help">Unset values follow Protokuda's defaults, or the page theme's when this theme is on one frame.</p>
+          {/if}
+          {#each group.tokens.filter((t) => supported(t.name)) as token (token.name)}
+            {#if token.kind === 'length'}
+              <GeometryRow {token} />
+            {:else}
+              <TokenRow {token} />
+            {/if}
+          {/each}
+        </section>
+      {/each}
+      <PreviewPanel />
+      <ContrastPanel />
+    {/if}
     <LibraryPanel />
-    <PreviewPanel />
-    {#each GROUPS as group (group.name)}
-      <section class="panel" aria-labelledby="grp-{group.name}">
-        <h2 id="grp-{group.name}">{group.name}</h2>
-        {#each group.tokens as token (token.name)}
-          <TokenRow {token} />
-        {/each}
-      </section>
-    {/each}
-    <ContrastPanel />
   </aside>
 </main>

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { autosave, loadAutosave } from './autosave.js'
+import { autosave, loadAutosave, noteHistory } from './autosave.js'
 import { History } from './history.svelte.js'
 
 /** An in-memory localStorage; `full` makes writes throw, as a full or blocked storage does. */
@@ -39,21 +39,25 @@ describe('loadAutosave', () => {
 })
 
 describe('autosave', () => {
-  it('saves the JSON and notes it in the history', () => {
+  it('saves the JSON', () => {
     const storage = fakeStorage()
     vi.stubGlobal('localStorage', storage)
-    const history = new History()
-    autosave('k', '{"n":1}', history)
-    autosave('k', '{"n":2}', history)
+    autosave('k', '{"n":1}')
+    autosave('k', '{"n":2}')
     expect(storage.items.get('k')).toBe('{"n":2}')
-    expect(history.canUndo).toBe(true)
   })
 
-  it('still notes the change when storage refuses it', () => {
+  it('carries on when storage refuses it', () => {
     vi.stubGlobal('localStorage', fakeStorage({ full: true }))
+    expect(() => autosave('k', '{"n":1}')).not.toThrow()
+  })
+})
+
+describe('noteHistory', () => {
+  it('notes each state in the history', () => {
     const history = new History()
-    autosave('k', '{"n":1}', history)
-    autosave('k', '{"n":2}', history)
+    noteHistory(history, '{"n":1}')
+    noteHistory(history, '{"n":2}')
     expect(history.canUndo).toBe(true)
   })
 })

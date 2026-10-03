@@ -23,6 +23,15 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
   the library source. Library changes happen in the protokuda repo and arrive here as package updates.
 - **One app, not a monorepo.** One Vite build; the tools are views (`#/designer`, `#/themer`). Each keeps
   its own module-level store, so switching views never loses work.
+- **One document: the Studio project.** A `.json` file `{ format: 2, design, themes, editing }`: the
+  designer's design and the project's own themes (a list; `editing` is the one the themer has open).
+  New, Open, Save and Export are global, in the toolbar, and act on the whole project. Open also takes
+  format-1 files (the designer's old design files) and theme `.css` files (added to the project's themes).
+- **One title and version**, the project's. They live in `design.page` (so the designer's undo covers
+  them), are edited in the toolbar, and name every file (`<title>-v<version>.json/.zip`); exported theme
+  files carry the version in their header. Themes have no version of their own.
+- **Undo is per tool**, in the same toolbar spot: the designer's history covers the design, the
+  themer's the project's themes. After New or Open, each tool's Undo brings back its own part.
 - **Nothing hard-coded from the package**: `virtual:protokuda` (vite.config.js) gives the version, the
   palette (parsed from `dist/protokuda.css`), the built-in themes (from `dist/themes/`), their names, the
   default theme (the one protokuda.css's `:root` matches; the build fails if none does) and the `:root`
@@ -31,16 +40,21 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
 - **Imports go one way.** The two tools never import each other; both import `src/shared/`. Theme code
   either tool needs (the model, token schema, theme CSS, library helpers) lives in `src/shared/theme/`.
 - **WYSIWYG.** Previews render with the real `protokuda.css` from the installed package.
-- **Exports are zips** (`fflate`) named `<name>-v<version>.zip`, with Protokuda links pinned to the
+- **Export is one zip** (`fflate`) named `<title>-v<version>.zip`: `index.html`, `layout.css`, a
+  class-only `<name>.css` per project theme (`classCss`; a `:root` theme file would turn the whole page
+  that theme even when only one frame uses it), and a `README.md`. Protokuda links are pinned to the
   **exact installed version**, so an export looks exactly like the preview. Exported HTML also links the
   Antonio font (Protokuda doesn't import it; see below).
-- **Autosave** to `localStorage` (wrapped in try/catch). The keys (`pk-designer:design`, `pk-themer:theme`)
-  predate the merge; keep them so existing autosaves carry over.
-- **Theme library.** The themer saves themes to a library (`pk-studio:themes` in localStorage, re-read
-  when another window changes it); the designer offers them beside the built-ins. Only hex and
-  `var(--pk-*)` values get in (`cleanTheme`), so library themes are safe in the preview's `<style>`.
-  Built-in names are reserved. A theme the library no longer has stays selected in a design, marked
-  "not in your library".
+- **Autosave** of the whole project to `localStorage` under `pk-studio:project` (wrapped in try/catch).
+  With no project autosave yet, the stores migrate the pre-project keys (`pk-designer:design`,
+  `pk-themer:theme`, plus the library themes the old design used); those keys are left in place.
+- **Project themes and the library.** Project themes travel in the project file; the designer offers
+  them beside the built-ins. The library (`pk-studio:themes` in localStorage, re-read when another window
+  changes it) keeps themes in this browser for any project: the themer saves into it and adds from it,
+  and the designer's pickers list library themes too, copying one into the project when it's chosen.
+  Every way in goes through `cleanTheme` (hex and `var(--pk-*)` colors, plain lengths for geometry), so
+  project and library themes are safe in the preview's `<style>`. Built-in names are reserved. Renaming
+  a project theme renames it in the design too.
 - **PWA** (`vite-plugin-pwa`, config in vite.config.js): works offline from the first visit; the build
   is precached. Updates wait for the user (`registerType: 'prompt'`, an Update button in the toolbar) rather
   than swapping code mid-edit. Installed, it asks for persistent storage (not in a tab: Firefox would prompt).
@@ -50,10 +64,13 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
 - **Icons:** the mark is Protokuda's elbow (rounded outside, square inside) with a 2x2 grid of palette
   colors. `public/favicon.svg` is the source; `npm run icons` renders the PNGs (needs `rsvg-convert`), which
   are committed so CI doesn't need it.
-- **Files:** where the browser has File System Access (Chromium on desktop), Open keeps a handle and the
-  designer's Save writes back to the same file while its name (`<title>-v<version>.json`) still matches; a
+- **Files:** where the browser has File System Access (Chromium on desktop), Open keeps a handle and
+  Save writes back to the same file while its name (`<title>-v<version>.json`) still matches; a
   new title or version asks where to save. Elsewhere (Safari, Firefox, iPad) Open uses a file input and
-  Save downloads. Installed, "Open with" takes `.json` designs and `.css` themes (`file_handlers`).
+  Save downloads. Installed, "Open with" takes `.json` projects and `.css` themes (`file_handlers`).
+- **Toolbar:** global on the left (project title and version, New/Open/Save/Export), then the tool tabs
+  joined to the open tool's group: Undo and Redo first (rendered by `Toolbar.svelte` from the tool's
+  store), then the tool's own buttons (the designer's Add frame).
 - **Touch and tablets:** the canvas takes every touch for drawing (`touch-action: none`), so it must never
   need scrolling sideways: below 52rem the designer stacks the inspector under a full-width canvas. On
   coarse pointers, handles and track lines get ~44px hit areas; with no hover, the lines stay visible.
@@ -72,29 +89,30 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
   - `grid`: column tracks, row tracks;
   - `frames[]`: id, area name, cell rectangle, type, modifiers, theme (optional), title, label,
     sidebar items (text + `data-code`), status text;
-  - `page`: page theme, `--pk-inner-radius`, other page-level tokens.
-- **Export:** `index.html` with one element per frame, plus `layout.css` with named `grid-template-areas`.
-- **Save/load** designs as `.json` files. A saved file carries copies of its library themes (`themes`,
-  by name), so it opens anywhere: Open adds the ones the library lacks; on a name clash the library's wins.
-- **Custom themes in exports** are `<name>.css` beside `index.html`, class-only (`classCss`), linked after
-  Protokuda. A `:root` theme file would turn the whole page that theme even when only one frame uses it.
+  - `page`: title and version (the project's), page theme, alert. No tokens: geometry is the theme's.
+    Older designs' `page.tokens` move into the page theme on load if it's a project theme (`migrateTokens`).
+- **Export:** `index.html` with one element per frame, plus `layout.css` with named `grid-template-areas`;
+  `index.html` links the project themes the design uses, after Protokuda.
 - **Frame content is placeholders only**: titles, labels, sidebar buttons and status text. Not arbitrary
   content inside frames; that's a page builder, not this app.
 
 ### Themer
 
-- **The theme is one model**: `{ name, label, version, tokens }` where token values are CSS values exactly as a
-  theme file writes them: `var(--pk-<palette>)`, `var(--pk-<token>)` or `#hex`. Preview, export,
-  autosave and undo all derive from it.
-- **The theme `.css` is the save format.** Open parses theme CSS (built `:root`, source `.pk-theme-x`, or
-  our export); Export writes `:root, .pk-theme-<name>` in `@layer protokuda.theme`. No separate JSON.
-- **Metadata lives in the header comment** (label, `Version N`, the Protokuda version), since CSS has
-  nowhere else for it; a custom property would leak into the cascade. `parseTheme` reads label and version.
-- **Export** holds `<name>.css` (stable name, for linking) and a `README.md` on using it.
+- **A theme is what the frames look like**, shape as well as color: `{ name, label, tokens }` where
+  color values are CSS values exactly as a theme file writes them (`var(--pk-<palette>)`,
+  `var(--pk-<token>)` or `#hex`) and the optional Geometry group holds plain lengths (edge widths,
+  sidebar and statusline sizes, outer corners, the inner elbow curve). Unset geometry follows
+  Protokuda's defaults, or the page theme's when the theme is on one frame (custom properties inherit).
+  Geometry tokens the installed protokuda.css doesn't know yet (`knownTokens`) are hidden.
+- **The themer edits one of the project's themes** (pick, create from a built-in, remove); with none, it
+  shows an empty state. Theme CSS is still what Open reads (built `:root`, source `.pk-theme-x`, or our
+  export) and what Export writes, in `@layer protokuda.theme`.
+- **Metadata lives in the header comment** (label, the project's `Version N`, the Protokuda version), since
+  CSS has nowhere else for it; a custom property would leak into the cascade. `parseTheme` reads the label.
 - **Preview**: the theme's tokens as inline custom properties on the stage (inline beats protokuda's layers).
 - **Contrast**: WCAG AA, 4.5:1 for text pairs, 3:1 for frame edges and focus rings (`PAIRS` in color.js).
 - **Two versions, kept apart by name**: `pkVersion` is the installed Protokuda package's (`virtual:protokuda`
-  exports it as `version`; import it as `pkVersion`), `theme.version` is the user's theme counter.
+  exports it as `version`; import it as `pkVersion`), `design.page.version` is the project's.
 
 ## Plan
 
@@ -115,9 +133,11 @@ exact version for now); whether to inline the CSS as an export option.
   its own; dev tooling and GitHub Actions are grouped. TypeScript majors are held back until svelte-check
   supports them (its peer dependency is `^5 || ^6`).
 - `vite.config.js`: the `virtual:protokuda` module (`version`, `palette`, `themes`, `themeNames`,
-  `defaultTheme`, `rootTokens`; types in `src/virtual.d.ts`). It imports `src/shared/theme/`, so those modules must stay
+  `defaultTheme`, `rootTokens`, `knownTokens`; types in `src/virtual.d.ts`). It imports `src/shared/theme/`, so those modules must stay
   free of browser-only code.
-- `src/main.js`, `src/App.svelte`: mount the shell, which shows one tool by the URL hash.
+- `src/main.js`, `src/App.svelte`: mount the shell, which shows one tool by the URL hash, runs the
+  project autosave and both tools' history effects (so they follow every change, whichever tool is
+  showing), and opens files launched with the installed app.
 - CSS, in three places:
   - `src/app.css`: the UI shared by both tools (toolbar, buttons, inspector, fields), global;
   - a component's own `<style>`: anything only that component uses (Svelte scopes it);
@@ -125,32 +145,38 @@ exact version for now); whether to inline the CSS as an export option.
     its layout. These load globally too, so every rule starts with `.designer` / `.themer` (the tool's `<main>`).
 - `src/shared/`:
   - `route.svelte.js`: the current view, from the hash;
-  - `Toolbar.svelte`: the studio header, the tool tabs, the status message and the update notice; each
-    tool fills in its buttons;
+  - `Toolbar.svelte`: the studio header: project title and version, New/Open/Save/Export, the tool tabs,
+    Undo/Redo for the open tool, the status message and the update notice; each tool adds its buttons;
+  - `project.svelte.js`: the project: its file format, New/Open/Save/Export and autosave. The designer
+    registers its part (`setDesign`), so this never imports a tool;
+  - `themes.svelte.js`: the project's themes (`projectThemes`: add, remove, rename, adopt from the library);
+  - `saved.js`: the project autosave read at startup, or the pre-project autosaves to migrate;
+  - `status.svelte.js`: the toolbar's status message;
+  - `readme.js` + `readme.md`: the export README; edit the Markdown, `{{key}}` placeholders are filled
+    in by `readme()`, which throws on a placeholder it has no value for;
   - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step;
-  - `autosave.js`: `loadAutosave` and `autosave` (save to localStorage, note in the history), which both
-    stores' `changed()` use;
+  - `autosave.js`: `loadAutosave`, `autosave` (save to localStorage) and `noteHistory`;
   - `shortcuts.js`: `undoShortcuts(store)`, the undo/redo keys for `<svelte:window>`, with the one list of
     fields that keep their own native undo;
   - `library.svelte.js`: the theme library's state (its pure helpers are `theme/library.js`);
   - `pwa.svelte.js`: service worker registration, the update/offline notice state, persistent storage;
   - `files.js`: `pickFile`, `saveFile` (in place where possible), `download`, and `takeFile` for file inputs.
     The pickers come from `window` by default; tests pass stand-ins;
-  - `launch.svelte.js`: files opened with the installed app, waiting for the view that opens them;
+  - `launch.svelte.js`: files opened with the installed app, waiting for the shell to open them;
   - `theme/`, the theme model both tools use, with its tests:
-    - `tokens.js`: the token schema (`GROUPS`) and value helpers: `bare()` strips `--pk-`, `valueKind()`
-      says whether a value is unset, custom hex, a palette color, a token reference or other;
-    - `theme.js`: the `Theme` type and model operations: naming, `startFrom`, `completeTheme`,
+    - `tokens.js`: the token schema (`GROUPS`, colors then Geometry; `COLOR_TOKENS`) and value helpers:
+      `bare()` strips `--pk-`, `valueKind()` says whether a color value is unset, custom hex, a palette
+      color, a token reference or other; `isLength`, `sameLength` for geometry;
+    - `theme.js`: the `Theme` type and model operations: naming (`freeName`), `startFrom`, `completeTheme`,
       `defaultThemeOf`;
     - `css.js`: reading theme CSS (`parseTheme`, `paletteFrom`, `rootDeclarations`) and writing it
       (`themeCss`, and for the designer `classCss` and `classRule`);
-    - `library.js`: the library's pure helpers: `cleanTheme`, `readThemes`, `sameTheme`, and `mergeThemes`
-      (what opening a design file adds to the library);
+    - `library.js`: pure helpers for library and project themes: `cleanTheme`, `readThemes`, `sameTheme`;
     - `fixtures.js`: tests only; reads the installed package's built files.
 - `public/`: favicon and app icons. `icons/`: the maskable icon's source and `render.sh`.
 
 **Designer** (`src/designer/`):
-- `Designer.svelte`: the tool's toolbar buttons, shortcuts and layout.
+- `Designer.svelte`: the tool's toolbar button (Add frame), shortcuts and layout.
 - `lib/model.js`: the JSON model (JSDoc typedefs `Design`, `Frame`, `Rect`, ... at the top), geometry (fits/overlap, insert/remove tracks), loading/validation.
 - `lib/markup.js`: `index.html` and `layout.css` generation. The preview renders the same strings
   (scoped to `.pv`, frames matched by `data-area`, screen `inert`), so preview and export can't drift.
@@ -159,23 +185,24 @@ exact version for now); whether to inline the CSS as an export option.
 - `lib/measure.js`: `measureGrid`, where the screen's tracks are in canvas pixels, from its computed style
   and bounding boxes; the canvas positions its guides from it.
 - `lib/store.svelte.js`: the design `$state` and editor state; components edit the design directly.
-  `customThemes` are the library themes the design uses: the preview injects their `classRule`s, Save
-  embeds them and Export writes them out.
+  Registers the design with the project. `customThemes` are the project themes the design uses: the
+  preview injects their `classRule`s and the export links them.
 - Editing rule: frames and tracks change through `model.js` functions (`placeFrame`, `deleteFrame`,
   `insertTrack`, ...) called on `store.design`; plain fields are edited directly. The store holds only
   editor state (selection, history, files). A selected id may outlive its frame; `store.selected` is null then.
 - `components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
   positioned by `measureGrid`.
-- `components/ThemeOptions.svelte`: a theme picker's options, built-in then library.
+- `components/ThemeOptions.svelte`: a theme picker's options: built-in, the project's, then the library's
+  (choosing one adopts it into the project).
 
 **Themer** (`src/themer/`):
-- `Themer.svelte`: the tool's toolbar buttons, shortcuts and layout.
+- `Themer.svelte`: the tool's shortcuts and layout (Geometry first among the token groups).
 - `lib/color.js`: resolving values to colors, cycle detection, contrast and `contrastChecks`.
-- `lib/readme.js` + `readme.md`: the export README; edit the Markdown, `{{key}}` placeholders are filled
-  in by `readme()`, which throws on a placeholder it has no value for.
-- `lib/store.svelte.js`: the theme `$state`, derived contrast `checks`, preview options, autosave, open/export.
-- `components/`: `Preview`, `ThemePanel` (label, name, version, start from), `LibraryPanel` (save,
-  edit, delete), `PreviewPanel` (preview-only options), `TokenRow`, `ContrastPanel`.
+- `lib/store.svelte.js`: the open theme (derived from `projectThemes`), contrast `checks`, preview
+  options, history over the project's themes, create and reset.
+- `components/`: `Preview`, `ThemesPanel` (the project's themes: pick, create, remove), `ThemePanel`
+  (label, name, reset colors), `LibraryPanel` (save, add to project, delete), `PreviewPanel`
+  (preview-only options), `TokenRow` (a color), `GeometryRow` (a length), `ContrastPanel`.
 
 ## Protokuda 3.x reference
 
@@ -240,6 +267,8 @@ Typical frame:
 - **Geometry:**
   - `--pk-frame-line` (3px), `--pk-frame-bar` (0.5rem), `--pk-frame-side` (1.1rem);
   - `--pk-frame-radius` (2rem), `--pk-sidebar-width` (5rem), `--pk-statusline-height` (2rem);
+  - `--pk-elbow-radius` and `--pk-end-radius` (protokuda's `corner-radii` branch, not yet released):
+    the outer corners on the elbow side and the far side, both following `--pk-frame-radius` when unset;
   - `--pk-inner-radius` (0rem = square proto elbows; ~1.5rem = LCARS curve; needs a unit; applies
     to `pk-std` and `pk-partial` only).
 - **Type:** `--pk-sans-font-family`, `--pk-mono-font-family`, `--pk-letter-spacing` (0.06em).

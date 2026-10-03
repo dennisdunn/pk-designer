@@ -100,8 +100,55 @@ body {
 .toolbar nav {
   display: flex;
   gap: 0.25rem;
+}
+
+/* Global: the project's title and version, then its file actions. */
+.toolbar .global,
+.toolbar .tool {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+.toolbar .project {
+  display: grid;
+  grid-template-columns: 11rem auto;
+  align-items: center;
+  gap: 0.25rem;
   padding-left: 0.75rem;
   border-left: 3px solid var(--ui-muted);
+}
+.toolbar .project input {
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  font: inherit;
+  color: var(--ui-text);
+  background: var(--ui-bg);
+  border: 1px solid #789;
+  border-radius: 0;
+}
+.toolbar .project .ver {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--ui-muted);
+}
+.toolbar .project .ver input {
+  width: 3.5rem;
+}
+
+/* The open tool: its tab, joined by a bar to its own buttons (Undo and Redo always first). */
+.toolbar .tool {
+  gap: 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--ui-muted);
+}
+.toolbar .tool .tabs {
+  margin-right: 0.5rem;
+}
+.toolbar .tool nav:not(.tabs) {
+  padding-left: 0.5rem;
+  border-left: 0.5rem solid var(--ui-text);
 }
 
 .toolbar .message {
@@ -281,12 +328,6 @@ body {
   white-space: nowrap;
 }
 
-.inspector .version {
-  display: grid;
-  grid-template-columns: 5rem auto;
-  justify-content: start;
-  gap: 0.4rem;
-}
 .inspector output {
   color: var(--ui-text);
   text-transform: none;

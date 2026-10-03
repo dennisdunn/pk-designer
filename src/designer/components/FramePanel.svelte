@@ -4,6 +4,7 @@
   // Edits go straight into the store's design, which is the one source of truth.
   import { FRAME_TYPES, MODIFIERS, areaNameError, deleteFrame, placeFrame } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
+  import { projectThemes } from '../../shared/themes.svelte.js'
   import ThemeOptions from './ThemeOptions.svelte'
 
   // Only mounted while a frame is selected.
@@ -101,7 +102,7 @@
 
   <div class="field">
     <label for="ins-frame-theme">Theme</label>
-    <select id="ins-frame-theme" bind:value={frame.theme}>
+    <select id="ins-frame-theme" bind:value={frame.theme} onchange={(e) => projectThemes.adopt(e.currentTarget.value)}>
       <option value="">Same as page</option>
       <ThemeOptions value={frame.theme} />
     </select>

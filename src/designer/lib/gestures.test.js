@@ -15,7 +15,7 @@ const frame = (id, rect) => ({ ...newFrame({ frames: [] }, rect), id, area: id }
 const design = () => ({
   version: MODEL_VERSION,
   grid: { columns: ['1fr', '1fr', '1fr', '1fr'], rows: ['1fr', '1fr', '1fr', '1fr'] },
-  page: { title: 't', version: 1, theme: 'greysmoke', alert: false, tokens: {} },
+  page: { title: 't', version: 1, theme: 'greysmoke', alert: false },
   frames: [frame('f', { x: 0, y: 0, w: 1, h: 1 }), frame('o', { x: 2, y: 2, w: 1, h: 1 })],
 })
 

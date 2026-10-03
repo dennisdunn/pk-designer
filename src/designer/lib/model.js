@@ -3,12 +3,12 @@
 //
 // The functions here that change a design (placeFrame, deleteFrame, insertTrack, ...)
 // are the way to edit frames and tracks: components call them on `store.design`.
-// Plain fields (titles, themes, tokens) are edited directly. The store only adds
+// Plain fields (titles, themes) are edited directly. The store only adds
 // editor state on top: selection, history, files.
 
-import { defaultTheme, rootTokens } from 'virtual:protokuda'
+import { defaultTheme } from 'virtual:protokuda'
 
-// The file format's version. Not to be confused with `page.version`, the design's own
+// The design's format version. Not to be confused with `page.version`, the project's own
 // version number, which the user bumps and which goes into download filenames.
 export const MODEL_VERSION = 1
 
@@ -44,11 +44,10 @@ export const MODEL_VERSION = 1
  */
 /**
  * @typedef {object} Page
- * @property {string} title
- * @property {number} version  the design's own version, bumped by the user
+ * @property {string} title    the project's title, and the exported page's
+ * @property {number} version  the project's own version, bumped by the user
  * @property {string} theme
  * @property {boolean} alert
- * @property {Record<string, string>} tokens  `--pk-*` custom properties for `:root`
  */
 /**
  * @typedef {object} Design
@@ -74,23 +73,6 @@ export const MODIFIERS = [
   { value: 'flip', label: 'Flip' },
   { value: 'alert', label: 'Alert' },
 ]
-
-// Page-level tokens the inspector offers. An empty value means "library default".
-export const PAGE_TOKENS = [
-  { name: '--pk-frame-line', label: 'Frame line' },
-  { name: '--pk-frame-bar', label: 'Frame bar' },
-  { name: '--pk-frame-side', label: 'Frame side' },
-  { name: '--pk-frame-radius', label: 'Frame radius' },
-  { name: '--pk-sidebar-width', label: 'Sidebar width' },
-  { name: '--pk-statusline-height', label: 'Statusline height' },
-  // Each placeholder is Protokuda's own default, read from protokuda.css at build time.
-].map((t) => ({ ...t, placeholder: rootTokens[t.name] ?? '' }))
-
-/**
- * Protokuda's default `--pk-inner-radius`, in rem (read from protokuda.css): where the inspector's
- * slider sits when a design doesn't set one.
- */
-export const DEFAULT_INNER_RADIUS = parseFloat(rootTokens['--pk-inner-radius']) || 0
 
 /** A new design's page theme: the package's default, read from protokuda.css at build time. */
 const DEFAULT_THEME = defaultTheme
@@ -163,15 +145,6 @@ export function isValidTrack(value) {
   // `CSS` is missing in Node (the tests); fall back to a pattern there.
   if (typeof CSS !== 'undefined') return CSS.supports('grid-template-columns', v)
   return SIMPLE_TRACK.test(v) || /^(auto|min-content|max-content)$/.test(v) || /^(minmax|fit-content)\(.+\)$/.test(v)
-}
-
-/** A CSS length for a page token, e.g. `1.5rem`. Empty means "unset". */
-export function isValidLength(value) {
-  const v = String(value).trim()
-  if (!v) return true
-  if (/[;{}]/.test(v)) return false
-  if (typeof CSS !== 'undefined') return CSS.supports('width', v)
-  return /^-?(\d*\.?\d+)(px|rem|em|%|vw|vh)$|^0$/.test(v)
 }
 
 // ---------- geometry ----------
@@ -306,15 +279,6 @@ export function setTracks(design, axis, sizes) {
 }
 
 /**
- * Download filename without extension: slugged page title plus version, e.g. `bridge-v3`.
- * @param {Design} design
- */
-export function fileBaseName(design) {
-  const title = design.page.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'design'
-  return `${title}-v${design.page.version}`
-}
-
-/**
  * Every theme the design uses, page first, without repeats.
  * @param {Design} design
  * @returns {string[]}
@@ -346,7 +310,7 @@ export function newFrame(design, rect) {
 }
 
 /** @returns {Page} */
-const defaultPage = () => ({ title: 'Protokuda screen', version: 1, theme: DEFAULT_THEME, alert: false, tokens: {} })
+const defaultPage = () => ({ title: 'Protokuda screen', version: 1, theme: DEFAULT_THEME, alert: false })
 
 /**
  * What New gives you: one `1fr` column, one `1fr` row, no frames.
@@ -365,7 +329,7 @@ export function starterDesign() {
   return {
     version: MODEL_VERSION,
     grid: { columns: ['14rem', '1fr'], rows: ['7rem', '1fr', '6rem'] },
-    page: { ...defaultPage(), tokens: { '--pk-inner-radius': '0rem' } },
+    page: defaultPage(),
     frames: [
       frame('header', { x: 0, y: 0, w: 2, h: 1 }, { title: 'Main bridge', label: ['Deck 1'] }),
       frame('nav', { x: 0, y: 1, w: 1, h: 2 }, {
@@ -398,7 +362,7 @@ const int = (v) => (Number.isInteger(v) ? v : NaN)
  */
 export function normalizeDesign(raw, knownThemes = null) {
   if (!raw || typeof raw !== 'object' || !raw.grid || !Array.isArray(raw.frames)) {
-    throw new Error('Not a Protokuda Designer file.')
+    throw new Error('Not a Protokuda Studio project or design file.')
   }
   const okTheme = (t) => typeof t === 'string' && (!knownThemes || knownThemes.includes(t))
   const tracks = (list) => {
@@ -406,11 +370,6 @@ export function normalizeDesign(raw, knownThemes = null) {
     return out.length ? out : ['1fr']
   }
   const page = raw.page ?? {}
-  /** @type {Record<string, string>} */
-  const tokens = {}
-  for (const [k, v] of Object.entries(page.tokens ?? {})) {
-    if (/^--pk-[a-z-]+$/.test(k) && typeof v === 'string' && isValidLength(v)) tokens[k] = v.trim()
-  }
   /** @type {Design} */
   const design = {
     version: MODEL_VERSION,
@@ -420,7 +379,6 @@ export function normalizeDesign(raw, knownThemes = null) {
       version: Number.isInteger(page.version) && page.version >= 1 ? page.version : 1,
       theme: okTheme(page.theme) ? page.theme : DEFAULT_THEME,
       alert: page.alert === true,
-      tokens,
     },
     frames: [],
   }
@@ -444,4 +402,21 @@ export function normalizeDesign(raw, knownThemes = null) {
     design.frames.push(frame)
   }
   return design
+}
+
+/**
+ * The geometry tokens an older design set on its page (`page.tokens`), which now belong in a theme.
+ * Only plain lengths, by name.
+ * @param {any} raw
+ * @returns {Record<string, string>}
+ */
+export function legacyTokens(raw) {
+  /** @type {Record<string, string>} */
+  const out = {}
+  const tokens = raw?.page?.tokens
+  if (!tokens || typeof tokens !== 'object') return out
+  for (const [k, v] of Object.entries(tokens)) {
+    if (/^--pk-[a-z-]+$/.test(k) && typeof v === 'string' && v.trim()) out[k] = v.trim()
+  }
+  return out
 }

@@ -5,6 +5,17 @@
   grid-template-columns: minmax(0, 1fr) 24rem;
 }
 
+.themer .stage.empty {
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--ui-muted);
+}
+.themer .stage.empty a {
+  color: var(--ui-accent);
+}
+
 .themer .inspector .help.summary {
   font-size: 0.95rem;
   color: var(--ui-text);

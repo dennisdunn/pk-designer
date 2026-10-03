@@ -73,19 +73,13 @@ export function templateAreas(design) {
 }
 
 /**
- * layout.css. With `scope` (the preview), selectors are prefixed and tokens go on the
- * scope element instead of `:root`; frames are matched by data-area instead of id.
+ * layout.css. With `scope` (the preview), selectors are prefixed and frames are matched by
+ * data-area instead of id. Geometry tokens belong to themes, not the layout.
  */
 export function layoutCss(design, { scope = '' } = {}) {
-  const root = scope || ':root'
   const pre = scope ? `${scope} ` : ''
   const frameSel = (area) => (scope ? `${pre}[data-area="${area}"]` : `#${area}`)
   const out = []
-
-  const tokens = Object.entries(design.page.tokens).filter(([, v]) => v)
-  if (tokens.length) {
-    out.push(`${root} {`, ...tokens.map(([k, v]) => `  ${k}: ${v};`), '}', '')
-  }
   out.push(
     `${pre}.pk-screen {`,
     `  grid-template-columns: ${design.grid.columns.join(' ')};`,

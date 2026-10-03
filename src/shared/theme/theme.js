@@ -4,13 +4,13 @@
 import { TOKENS } from './tokens.js'
 
 /**
- * A Protokuda theme. Token values are CSS values exactly as they appear in a theme file:
+ * A Protokuda theme. Color values are CSS values exactly as they appear in a theme file:
  * a palette color (`var(--pk-lilac)`), another token (`var(--pk-secondary-light)`), or a
- * hex color (`#ff9900`). A token that's absent is unset.
+ * hex color (`#ff9900`); geometry values are lengths (`1.5rem`). A token that's absent is unset.
+ * A theme has no version of its own: the project's goes in its file's header comment.
  * @typedef {object} Theme
  * @property {string} name   class/file name: `pk-theme-<name>`, `<name>.css`
  * @property {string} label  human name, written as the file's leading comment
- * @property {number} version  the theme's own version, bumped by the user; in the header comment
  * @property {Record<string, string>} tokens
  */
 
@@ -36,10 +36,14 @@ export const nameFor = (/** @type {string} */ label) =>
   label.toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/^[0-9]+/, '') || 'custom'
 
 /**
- * Download filename without extension: the theme name plus version, e.g. `lilac-v3`.
- * @param {Theme} theme
+ * `name`, or `name2`, `name3`, ... : the first that isn't taken.
+ * @param {string} name
+ * @param {(name: string) => boolean} taken
  */
-export const fileBaseName = (theme) => `${theme.name}-v${theme.version}`
+export function freeName(name, taken) {
+  if (!taken(name)) return name
+  for (let i = 2; ; i++) if (!taken(`${name}${i}`)) return `${name}${i}`
+}
 
 /**
  * The package's default theme: the one whose tokens all equal protokuda.css's `:root` values,
@@ -59,12 +63,12 @@ export function defaultThemeOf(rootTokens, themes) {
  * @returns {Theme}
  */
 export function startFrom(from) {
-  return { name: `my${from.name}`, label: `My ${from.label}`, version: 1, tokens: { ...from.tokens } }
+  return { name: `my${from.name}`, label: `My ${from.label}`, tokens: { ...from.tokens } }
 }
 
 /**
  * Fill in anything a loaded theme lacks from a base theme, so every required token is set.
- * Drops unknown tokens and repairs a missing or invalid version.
+ * Drops unknown tokens.
  * @param {Theme} theme
  * @param {Record<string, string>} base  tokens of the default theme
  * @returns {Theme}
@@ -75,6 +79,5 @@ export function completeTheme(theme, base) {
     const v = theme.tokens[t.name] ?? (t.optional ? undefined : base[t.name])
     if (v) tokens[t.name] = v
   }
-  const version = Number.isInteger(theme.version) && theme.version >= 1 ? theme.version : 1
-  return { name: theme.name, label: theme.label, version, tokens }
+  return { name: theme.name, label: theme.label, tokens }
 }

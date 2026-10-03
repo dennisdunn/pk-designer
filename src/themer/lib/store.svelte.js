@@ -1,47 +1,34 @@
-// App state: the theme (the one model) plus editor state: history and preview options.
-// The theme file is the save format, so Open reads the same CSS that Export writes.
+// App state: the theme being edited (one of the project's themes, src/shared/themes.svelte.js)
+// plus editor state: history over the project's themes, and preview options. Files are the
+// project's (src/shared/project.svelte.js).
 
-import { strToU8, zipSync } from 'fflate'
-// `version` is the Protokuda package's; `pkVersion` keeps it apart from a theme's own version.
-import { defaultTheme, palette, themes, version as pkVersion } from 'virtual:protokuda'
-import { autosave, loadAutosave } from '../../shared/autosave.js'
-import { download } from '../../shared/files.js'
+// `version` is the Protokuda package's; `pkVersion` keeps it apart from the project's version.
+import { knownTokens, palette, themes, version as pkVersion } from 'virtual:protokuda'
+import { noteHistory } from '../../shared/autosave.js'
 import { History } from '../../shared/history.svelte.js'
-import { parseTheme, themeCss } from '../../shared/theme/css.js'
-import { completeTheme, fileBaseName, isValidName, startFrom } from '../../shared/theme/theme.js'
+import { projectThemes } from '../../shared/themes.svelte.js'
+import { freeName, startFrom } from '../../shared/theme/theme.js'
+import { tokenDef } from '../../shared/theme/tokens.js'
 import { contrastChecks } from './color.js'
-import { readme } from './readme.js'
 
 /** @typedef {import('../../shared/theme/theme.js').Theme} Theme */
 
-const STORAGE_KEY = 'pk-themer:theme'
-/** The package's default theme's tokens; fill in tokens a loaded file leaves out. */
-const BASE = themes[defaultTheme].tokens
-
-/** The first theme a new visitor sees. */
-const FIRST = themes.goldentanoi ?? Object.values(themes)[0]
-
-/** An autosaved theme, if it still looks like one. @returns {Theme | null} */
-function readAutosave(/** @type {any} */ t) {
-  if (!isValidName(t.name) || typeof t.label !== 'string' || typeof t.tokens !== 'object') return null
-  return completeTheme(t, BASE)
-}
-
 class Store {
-  /** @type {Theme} */
-  theme = $state(loadAutosave(STORAGE_KEY, readAutosave) ?? startFrom(FIRST))
+  /** The theme being edited, or null when the project has none. */
+  theme = $derived(projectThemes.get(projectThemes.editing))
 
-  checks = $derived(contrastChecks(this.theme, palette))
+  checks = $derived(this.theme ? contrastChecks(this.theme, palette) : [])
   failing = $derived(this.checks.filter((c) => !c.pass).length)
 
   /** Preview-only settings; not part of the theme. */
-  preview = $state({ alert: false, innerRadius: 0 })
+  preview = $state({ alert: false })
 
+  /** Undo covers the project's themes: their tokens, names, which exist and which is open. */
   history = new History()
 
-  /** Call from an effect: reads the whole theme, so it runs on every change. */
+  /** Call from an effect: reads all the project's themes, so it runs on every change. */
   changed() {
-    autosave(STORAGE_KEY, JSON.stringify(this.theme), this.history)
+    noteHistory(this.history, JSON.stringify({ list: projectThemes.list, editing: projectThemes.editing }))
   }
 
   undo() {
@@ -55,34 +42,29 @@ class Store {
   /** @param {string | null} json */
   #restore(json) {
     if (json === null) return
-    this.theme = JSON.parse(json)
+    const { list, editing } = JSON.parse(json)
+    projectThemes.replaceAll(list, editing)
   }
 
-  /** Replace the theme with a copy of a built-in one. @param {string} name */
-  startFrom(name) {
-    this.replace(startFrom(themes[name]))
+  /** A new project theme, copied from a built-in one, and open it. @param {string} name */
+  create(name) {
+    const theme = startFrom(themes[name])
+    theme.name = freeName(theme.name, (n) => !projectThemes.canUse(n))
+    projectThemes.editing = projectThemes.add(theme)
+    return theme.name
   }
 
-  /** @param {Theme} theme */
-  replace(theme) {
-    this.theme = theme
-  }
-
-  /** @param {File} file */
-  async openCss(file) {
-    const theme = parseTheme(await file.text(), file.name.replace(/(\.min)?\.css$/, ''))
-    this.replace(completeTheme(theme, BASE))
-  }
-
-  /** One zip: the theme file and a README on how to use it. The CSS keeps a stable name for linking. */
-  exportZip() {
-    const zip = zipSync({
-      [`${this.theme.name}.css`]: strToU8(themeCss(this.theme, pkVersion)),
-      'README.md': strToU8(readme(this.theme, pkVersion)),
-    })
-    download(`${fileBaseName(this.theme)}.zip`, zip, 'application/zip')
+  /** Replace the open theme's colors with a copy of a built-in theme's; its geometry stays. @param {string} name */
+  resetTo(name) {
+    if (!this.theme) return
+    const geometry = Object.entries(this.theme.tokens).filter(([k]) => tokenDef(k)?.kind === 'length')
+    this.theme.tokens = { ...themes[name].tokens, ...Object.fromEntries(geometry) }
   }
 }
 
 export const store = new Store()
+
+/** Whether the installed protokuda.css knows a token (geometry tokens newer than it are hidden). */
+export const supported = (/** @type {string} */ name) => knownTokens.includes(name)
+
 export { palette, pkVersion, themes }

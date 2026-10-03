@@ -1,30 +1,34 @@
 <script>
-  // The theme's name and label, its version, and a starting point.
-  import { fileBaseName, isValidName, nameFor } from '../../shared/theme/theme.js'
+  // The open theme's label and name, resetting its colors, and how its contrast checks are doing.
+  import { projectThemes } from '../../shared/themes.svelte.js'
+  import { isValidName, nameFor } from '../../shared/theme/theme.js'
   import { store, themes } from '../lib/store.svelte.js'
 
-  const theme = $derived(store.theme)
+  const theme = $derived(/** @type {import('../../shared/theme/theme.js').Theme} */ (store.theme))
   const failing = $derived(store.failing)
 
   let base = $state(Object.keys(themes)[0])
-  let nameError = $state(false)
+  /** Why the typed name can't be used, or ''. */
+  let nameError = $state('')
 
-  function setName(e) {
-    const value = e.currentTarget.value.trim()
+  /** @param {string} value */
+  function rename(value) {
     nameError = !isValidName(value)
-    if (!nameError) theme.name = value
-  }
-
-  function setVersion(e) {
-    const n = Number(e.currentTarget.value)
-    if (Number.isInteger(n) && n >= 1) theme.version = n
-    else e.currentTarget.value = String(theme.version)
+      ? 'Lowercase letters, digits and hyphens, starting with a letter.'
+      : !projectThemes.canUse(value, theme.name)
+        ? `${value} is taken by ${themes[value] ? 'a built-in theme' : 'another of the project’s themes'}.`
+        : ''
+    if (!nameError) projectThemes.rename(theme.name, value)
   }
 
   // Typing a label suggests a name while the name still matches the old label.
+  /** @param {Event & { currentTarget: HTMLInputElement }} e */
   function setLabel(e) {
     const value = e.currentTarget.value
-    if (theme.name === nameFor(theme.label) && isValidName(nameFor(value))) theme.name = nameFor(value)
+    const suggested = nameFor(value)
+    if (theme.name === nameFor(theme.label) && projectThemes.canUse(suggested, theme.name)) {
+      projectThemes.rename(theme.name, suggested)
+    }
     theme.label = value
   }
 </script>
@@ -44,13 +48,13 @@
       value={theme.name}
       spellcheck="false"
       autocomplete="off"
-      aria-invalid={nameError}
+      aria-invalid={Boolean(nameError)}
       aria-describedby="ins-name-help"
-      oninput={setName}
+      oninput={(e) => rename(e.currentTarget.value.trim())}
     />
     <p id="ins-name-help" class="help" class:error={nameError}>
       {#if nameError}
-        Lowercase letters, digits and hyphens, starting with a letter.
+        {nameError}
       {:else}
         File <code>{theme.name}.css</code>, class <code>pk-theme-{theme.name}</code>
       {/if}
@@ -58,33 +62,16 @@
   </div>
 
   <div class="field">
-    <label for="ins-version">Version</label>
-    <div class="version">
-      <input
-        id="ins-version"
-        type="number"
-        min="1"
-        step="1"
-        value={theme.version}
-        aria-describedby="ins-version-help"
-        onchange={setVersion}
-      />
-      <button type="button" class="small" onclick={() => theme.version++}>Next version</button>
-    </div>
-    <p id="ins-version-help" class="help">Export filename: <code class="filename">{fileBaseName(theme)}.zip</code></p>
-  </div>
-
-  <div class="field">
-    <label for="ins-base">Start from</label>
+    <label for="ins-base">Reset colors to</label>
     <div class="row">
       <select id="ins-base" bind:value={base}>
         {#each Object.values(themes) as t (t.name)}
           <option value={t.name}>{t.label}</option>
         {/each}
       </select>
-      <button type="button" class="small" onclick={() => store.startFrom(base)}>Load</button>
+      <button type="button" class="small" onclick={() => store.resetTo(base)}>Load</button>
     </div>
-    <p class="help">Replaces every token with a copy of a built-in theme. Undo brings yours back.</p>
+    <p class="help">Replaces every color with a copy of a built-in theme's; the geometry stays. Undo brings yours back.</p>
   </div>
 
   <p class="help summary" class:error={failing > 0}>

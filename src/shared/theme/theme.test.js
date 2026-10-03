@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseTheme, rootDeclarations } from './css.js'
 import { pkg, palette } from './fixtures.js'
-import { completeTheme, defaultThemeOf, fileBaseName, labelFor, nameFor, startFrom } from './theme.js'
+import { completeTheme, defaultThemeOf, freeName, labelFor, nameFor, startFrom } from './theme.js'
 
 describe('names', () => {
   it('labels themes named after palette colors', () => {
@@ -11,8 +11,10 @@ describe('names', () => {
   it('makes a name from a label', () => {
     expect(nameFor('My Theme 2!')).toBe('mytheme2')
   })
-  it('names the export after the theme and version', () => {
-    expect(fileBaseName({ name: 'ember', label: 'Ember', version: 3, tokens: {} })).toBe('ember-v3')
+  it('finds a free name by numbering', () => {
+    const taken = new Set(['mylilac', 'mylilac2'])
+    expect(freeName('mylilac', (n) => taken.has(n))).toBe('mylilac3')
+    expect(freeName('ember', (n) => taken.has(n))).toBe('ember')
   })
 })
 
@@ -31,10 +33,10 @@ describe('default theme', () => {
 })
 
 describe('start from', () => {
-  it('copies a built-in theme under a new name, at version 1', () => {
-    const lilac = { name: 'lilac', label: 'Lilac', version: 4, tokens: { '--pk-primary': 'var(--pk-lilac)' } }
+  it('copies a built-in theme under a new name', () => {
+    const lilac = { name: 'lilac', label: 'Lilac', tokens: { '--pk-primary': 'var(--pk-lilac)' } }
     const t = startFrom(lilac)
-    expect(t).toEqual({ name: 'mylilac', label: 'My Lilac', version: 1, tokens: lilac.tokens })
+    expect(t).toEqual({ name: 'mylilac', label: 'My Lilac', tokens: lilac.tokens })
     t.tokens['--pk-primary'] = '#000'
     expect(lilac.tokens['--pk-primary']).toBe('var(--pk-lilac)')
   })
@@ -44,16 +46,15 @@ describe('complete', () => {
   const base = parseTheme(pkg('themes/greysmoke.css')).tokens
 
   it('fills in missing tokens from a base, leaving optional ones unset', () => {
-    const t = completeTheme({ name: 'x', label: 'X', version: 2, tokens: { '--pk-primary': '#123456' } }, base)
-    expect(t.version).toBe(2)
+    const t = completeTheme({ name: 'x', label: 'X', tokens: { '--pk-primary': '#123456' } }, base)
     expect(t.tokens['--pk-primary']).toBe('#123456')
     expect(t.tokens['--pk-text']).toBe(base['--pk-text'])
     expect('--pk-on-backdrop' in t.tokens).toBe(false)
+    expect('--pk-inner-radius' in t.tokens).toBe(false)
   })
 
-  it('drops unknown tokens and repairs a bad version', () => {
-    const t = completeTheme({ name: 'x', label: 'X', version: 0, tokens: { '--pk-nonesuch': '#fff' } }, base)
-    expect(t.version).toBe(1)
+  it('drops unknown tokens', () => {
+    const t = completeTheme({ name: 'x', label: 'X', tokens: { '--pk-nonesuch': '#fff' } }, base)
     expect('--pk-nonesuch' in t.tokens).toBe(false)
   })
 })

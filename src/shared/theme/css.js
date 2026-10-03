@@ -45,8 +45,8 @@ export function paletteFrom(css) {
 
 /**
  * Read a theme from CSS: a theme file from protokuda (source `.pk-theme-<name> {}` or built
- * `:root {}`) or one this editor exported. Unknown properties are ignored. The label is the
- * first line of the leading comment, and the version its `Version N` line (else 1).
+ * `:root {}`) or one the studio exported. Unknown properties are ignored. The label is the
+ * first line of the leading comment. (Its `Version N` line is the project's, not the theme's.)
  * @param {string} css
  * @param {string} [fallbackName]  e.g. from the filename
  * @returns {Theme}
@@ -60,30 +60,34 @@ export function parseTheme(css, fallbackName = 'custom') {
   const name = cls ?? (isValidName(fallbackName) ? fallbackName : nameFor(fallbackName))
   const header = /^\s*\/\*([\s\S]*?)\*\//.exec(css)?.[1] ?? ''
   const label = /^\*?[ \t]*([^\s*][^\n]*?)[ \t]*$/m.exec(header)?.[1]
-  const version = Number(/^\s*Version\s+(\d+)\s*$/im.exec(header)?.[1] ?? 1)
-  return { name, label: label ?? titleCase(name), version: version >= 1 ? version : 1, tokens }
+  return { name, label: label ?? titleCase(name), tokens }
 }
 
 /**
- * The theme file: linked on its own it themes the page (`:root`); with protokuda.css
- * also loaded, `.pk-theme-<name>` themes a single frame or section. CSS has nowhere else
- * for metadata, so the label and version go in the header comment, where Open finds them.
- * @param {Theme} theme
- * @param {string} pkVersion  the Protokuda version it was made against
+ * Which file a theme belongs to: the Protokuda version it was made against, and the project's
+ * version. CSS has nowhere else for metadata, so they go in the header comment.
+ * @typedef {{ pkVersion: string, version: number }} Stamp
  */
-export function themeCss(theme, pkVersion) {
-  return layered(theme, pkVersion, `:root,\n  .pk-theme-${theme.name}`)
+
+/**
+ * The theme file: linked on its own it themes the page (`:root`); with protokuda.css
+ * also loaded, `.pk-theme-<name>` themes a single frame or section.
+ * @param {Theme} theme
+ * @param {Stamp} stamp
+ */
+export function themeCss(theme, stamp) {
+  return layered(theme, stamp, `:root,\n  .pk-theme-${theme.name}`)
 }
 
 /**
  * The theme as a class only, for linking beside protokuda.css without making it the page
- * default: the designer's exports, where the page or a single frame opts in by class.
+ * default: the exports, where the page or a single frame opts in by class.
  * Open reads it back like a theme file.
  * @param {Theme} theme
- * @param {string} pkVersion
+ * @param {Stamp} stamp
  */
-export function classCss(theme, pkVersion) {
-  return layered(theme, pkVersion, `.pk-theme-${theme.name}`)
+export function classCss(theme, stamp) {
+  return layered(theme, stamp, `.pk-theme-${theme.name}`)
 }
 
 /**
@@ -95,10 +99,10 @@ export function classRule(theme) {
   return ['@layer protokuda.theme {', `  .pk-theme-${theme.name} {`, ...body(theme, '    '), '  }', '}', ''].join('\n')
 }
 
-/** @param {Theme} theme @param {string} pkVersion @param {string} selector */
-function layered(theme, pkVersion, selector) {
+/** @param {Theme} theme @param {Stamp} stamp @param {string} selector */
+function layered(theme, { pkVersion, version }, selector) {
   return [
-    `/**\n${comment(theme.label)}\nVersion ${theme.version}\nMade with Protokuda Themer for Protokuda ${pkVersion}\n*/`,
+    `/**\n${comment(theme.label)}\nVersion ${version}\nMade with Protokuda Studio for Protokuda ${pkVersion}\n*/`,
     '@layer protokuda.base, protokuda.theme, protokuda.state;',
     '',
     '@layer protokuda.theme {',
@@ -113,15 +117,16 @@ function layered(theme, pkVersion, selector) {
 /** Text that can't end the comment it sits in. @param {string} text */
 const comment = (text) => text.replace(/\*\//g, '* /')
 
-/** Declarations in schema order, with a blank line before the buttons, like the library's themes. */
+/**
+ * Declarations in schema order, with a blank line before the buttons like the library's themes,
+ * and before any geometry.
+ */
 function body(/** @type {Theme} */ theme, /** @type {string} */ indent) {
   const lines = []
   for (const g of GROUPS) {
-    if (g.name === 'Buttons') lines.push('')
-    for (const t of g.tokens) {
-      const v = theme.tokens[t.name]
-      if (v) lines.push(`${indent}${t.name}: ${v};`)
-    }
+    const set = g.tokens.filter((t) => theme.tokens[t.name])
+    if (set.length && (g.name === 'Buttons' || g.name === 'Geometry')) lines.push('')
+    for (const t of set) lines.push(`${indent}${t.name}: ${theme.tokens[t.name]};`)
   }
   return lines
 }

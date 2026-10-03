@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { parseTheme } from './css.js'
 import { pkg, palette } from './fixtures.js'
-import { cleanTheme, mergeThemes, readThemes, sameTheme } from './library.js'
+import { cleanTheme, readThemes, sameTheme } from './library.js'
 
 const base = parseTheme(pkg('themes/greysmoke.css')).tokens
 const PKG = { base, palette, builtIn: ['greysmoke', 'lilac'] }
 const ember = () => ({
   name: 'ember',
   label: 'Ember',
-  version: 2,
   tokens: { ...base, '--pk-primary': '#f60', '--pk-accent': 'var(--pk-golden-tanoi)' },
 })
 
@@ -25,6 +24,19 @@ describe('cleanTheme', () => {
     const clean = cleanTheme(t, base, palette)
     expect(clean.tokens['--pk-primary']).toBe(base['--pk-primary'])
     expect(clean.tokens['--pk-accent']).toBe(base['--pk-accent'])
+  })
+
+  it('keeps plain lengths for geometry, and nothing else there', () => {
+    const t = ember()
+    t.tokens['--pk-inner-radius'] = '1.5rem'
+    t.tokens['--pk-frame-line'] = '3px'
+    t.tokens['--pk-end-radius'] = 'calc(1rem)}</style>'
+    t.tokens['--pk-frame-bar'] = '#fff'
+    const clean = cleanTheme(t, base, palette)
+    expect(clean.tokens['--pk-inner-radius']).toBe('1.5rem')
+    expect(clean.tokens['--pk-frame-line']).toBe('3px')
+    expect('--pk-end-radius' in clean.tokens).toBe(false)
+    expect('--pk-frame-bar' in clean.tokens).toBe(false)
   })
 })
 
@@ -58,29 +70,8 @@ describe('sameTheme', () => {
     expect(sameTheme(a, b)).toBe(true)
   })
 
-  it('notices a changed token, label or version', () => {
+  it('notices a changed token or label', () => {
     expect(sameTheme(ember(), { ...ember(), tokens: { ...ember().tokens, '--pk-primary': '#f61' } })).toBe(false)
     expect(sameTheme(ember(), { ...ember(), label: 'Embers' })).toBe(false)
-    expect(sameTheme(ember(), { ...ember(), version: 3 })).toBe(false)
-  })
-})
-
-describe('mergeThemes', () => {
-  const lilac2 = () => ({ ...ember(), name: 'mylilac', label: 'My Lilac' })
-
-  it('adds the themes the library lacks', () => {
-    const { add, differed } = mergeThemes({ ember: ember() }, { ember: ember(), mylilac: lilac2() })
-    expect(add).toEqual([lilac2()])
-    expect(differed).toEqual([])
-  })
-
-  it("keeps the library's theme on a clash, and reports it only if they differ", () => {
-    const changed = { ...ember(), version: 3 }
-    expect(mergeThemes({ ember: ember() }, { ember: changed })).toEqual({ add: [], differed: ['ember'] })
-    expect(mergeThemes({ ember: ember() }, { ember: ember() })).toEqual({ add: [], differed: [] })
-  })
-
-  it('does nothing with nothing incoming', () => {
-    expect(mergeThemes({ ember: ember() }, {})).toEqual({ add: [], differed: [] })
   })
 })

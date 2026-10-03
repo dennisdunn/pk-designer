@@ -1,52 +1,107 @@
-// App state: the design (the one JSON model) plus editor state: selection, history, files.
+// App state: the design (the designer's part of the project) plus editor state: selection, history.
 // Frames and tracks are edited with the functions in model.js, called on `store.design`.
+// Files are the project's (src/shared/project.svelte.js); this store registers the design with it.
 
-import { strToU8, zipSync } from 'fflate'
-import { themeNames, version } from 'virtual:protokuda'
-import { autosave, loadAutosave } from '../../shared/autosave.js'
-import { download, saveFile } from '../../shared/files.js'
+import { rootTokens, themeNames, version } from 'virtual:protokuda'
+import { noteHistory } from '../../shared/autosave.js'
 import { History } from '../../shared/history.svelte.js'
-import { library } from '../../shared/library.svelte.js'
-import { classCss } from '../../shared/theme/css.js'
+import { project } from '../../shared/project.svelte.js'
+import { legacy, savedProject } from '../../shared/saved.js'
+import { projectThemes } from '../../shared/themes.svelte.js'
+import { isLength, sameLength, tokenDef } from '../../shared/theme/tokens.js'
 import { indexHtml, layoutCss } from './markup.js'
 import {
-  fileBaseName, firstEmptyCell, newFrame, normalizeDesign, rectFits, starterDesign, usedThemes,
+  emptyDesign, firstEmptyCell, legacyTokens, newFrame, normalizeDesign, rectFits, starterDesign, usedThemes,
 } from './model.js'
 
 /** @typedef {import('./model.js').Design} Design */
 /** @typedef {import('./model.js').Rect} Rect */
 
-const STORAGE_KEY = 'pk-designer:design'
+/** Theme names a design may use: the package's and the project's. */
+const knownThemes = () => [...themeNames, ...projectThemes.names]
 
-/** Theme names a design may use: the package's and the library's. */
-const knownThemes = () => [...themeNames, ...Object.keys(library.themes)]
+/**
+ * An older design's page geometry now belongs in a theme: move it into the page theme if that's
+ * one of the project's (where the theme doesn't set it already). Values equal to Protokuda's
+ * defaults are dropped quietly. Returns what to tell the user.
+ * @param {any} raw  the design as loaded
+ * @param {string} pageTheme
+ * @returns {string[]}
+ */
+function migrateTokens(raw, pageTheme) {
+  const moving = Object.entries(legacyTokens(raw)).filter(
+    ([k, v]) => tokenDef(k)?.kind === 'length' && isLength(v) && !sameLength(v, rootTokens[k] ?? ''),
+  )
+  if (!moving.length) return []
+  const names = moving.map(([k]) => k).join(', ')
+  const theme = projectThemes.get(pageTheme)
+  if (!theme) return [`Page geometry (${names}) belongs in a theme now; ${pageTheme} is built-in, so it was left out.`]
+  for (const [k, v] of moving) theme.tokens[k] ??= v
+  return [`Moved the page geometry (${names}) into the ${pageTheme} theme.`]
+}
 
-/** For the file pickers. @type {import('../../shared/files.js').FileType} */
-export const DESIGN_FILE = { description: 'Protokuda Studio design', accept: { 'application/json': ['.json'] } }
+/** The design the session starts with: the project autosave's, an older autosave's, or the example. */
+function initialDesign() {
+  const raw = savedProject ? savedProject.design : legacy.design
+  if (raw) {
+    try {
+      const design = normalizeDesign(raw, knownThemes())
+      if (!savedProject) migrateTokens(raw, design.page.theme)
+      return design
+    } catch {
+      // Not a design after all: start over.
+    }
+  }
+  return starterDesign()
+}
 
 class Store {
-  design = $state(loadAutosave(STORAGE_KEY, (raw) => normalizeDesign(raw, knownThemes())) ?? starterDesign())
+  design = $state(initialDesign())
   /** @type {string | null} */
   selectedId = $state(null)
 
   selected = $derived(this.design.frames.find((f) => f.id === this.selectedId) ?? null)
 
-  /** The library themes the design uses (built-ins come from protokuda.css). */
-  customThemes = $derived(
-    usedThemes(this.design).flatMap((name) => (themeNames.includes(name) ? [] : library.themes[name] ?? [])),
-  )
+  /** The project themes the design uses (built-ins come from protokuda.css). */
+  customThemes = $derived(usedThemes(this.design).flatMap((name) => projectThemes.get(name) ?? []))
 
   history = new History()
 
-  /**
-   * The file the design came from or was last saved to, where the browser lets Save write back.
-   * @type {import('../../shared/files.js').FileHandle | null}
-   */
-  fileHandle = null
+  constructor() {
+    // A renamed project theme keeps its place in the design.
+    projectThemes.onRename((from, to) => {
+      if (this.design.page.theme === from) this.design.page.theme = to
+      for (const f of this.design.frames) if (f.theme === from) f.theme = to
+    })
+    const store = this
+    project.setDesign({
+      // A getter: `design` is replaced wholesale on undo, New and Open.
+      get meta() {
+        return store.design.page
+      },
+      json: () => $state.snapshot(this.design),
+      check: (raw) => void normalizeDesign(raw),
+      load: (raw) => {
+        if (raw === null) {
+          this.#replace(emptyDesign())
+          return []
+        }
+        const design = normalizeDesign(raw, knownThemes())
+        const notes = migrateTokens(raw, design.page.theme)
+        this.#replace(design)
+        return notes
+      },
+      files: (themeFiles) => ({
+        'index.html': indexHtml(this.design, { version, themeFiles }),
+        'layout.css': layoutCss(this.design),
+      }),
+      usedThemes: () => this.customThemes.map((t) => t.name),
+    })
+  }
 
   /** Call from an effect: reads the whole design, so it runs on every change. */
   changed() {
-    autosave(STORAGE_KEY, JSON.stringify(this.design), this.history)
+    noteHistory(this.history, JSON.stringify(this.design))
   }
 
   undo() {
@@ -63,6 +118,12 @@ class Store {
     this.design = JSON.parse(json)
   }
 
+  /** @param {Design} design */
+  #replace(design) {
+    this.design = design
+    this.selectedId = null
+  }
+
   /**
    * The id may outlive its frame (deleted, or undone away); `selected` is then null,
    * and the selection comes back if the frame does.
@@ -70,16 +131,6 @@ class Store {
    */
   select(id) {
     this.selectedId = id
-  }
-
-  /**
-   * @param {Design} design
-   * @param {import('../../shared/files.js').FileHandle | null} [handle]  the file it came from
-   */
-  replace(design, handle = null) {
-    this.design = design
-    this.selectedId = null
-    this.fileHandle = handle
   }
 
   /**
@@ -96,49 +147,6 @@ class Store {
     this.design.frames.push(frame)
     this.selectedId = frame.id
     return frame
-  }
-
-  /**
-   * Save the design as `<title>-v<version>.json`, carrying copies of its custom themes so it opens
-   * anywhere. Writes back to the open file while the name still matches; a new title or version
-   * asks where to put the new file. Returns the name written, or null if it was downloaded or cancelled.
-   */
-  async saveJson() {
-    const themes = Object.fromEntries(this.customThemes.map((t) => [t.name, t]))
-    const file = this.customThemes.length ? { ...this.design, themes } : this.design
-    const name = `${fileBaseName(this.design)}.json`
-    const data = JSON.stringify(file, null, 2) + '\n'
-    const handle = await saveFile({ name, data, type: DESIGN_FILE, handle: this.fileHandle })
-    if (handle) this.fileHandle = handle
-    return handle ? handle.name : null
-  }
-
-  /**
-   * Open a design file. Themes it carries that the library lacks are added to the library;
-   * where the library has a theme by the same name, the library's wins.
-   * @param {File} file
-   * @param {import('../../shared/files.js').FileHandle | null} [handle]  for saving back to it
-   * @returns {Promise<{ added: string[], differed: string[] }>}
-   */
-  async openJson(file, handle = null) {
-    const raw = JSON.parse(await file.text())
-    normalizeDesign(raw) // throws if it isn't a design, before the library changes
-    const merged = library.merge(raw.themes)
-    this.replace(normalizeDesign(raw, knownThemes()), handle)
-    return merged
-  }
-
-  /**
-   * One zip, ready to unzip and open: index.html and layout.css side by side, plus a
-   * `<name>.css` for each custom theme, since the CDN only has the built-in ones.
-   */
-  exportZip() {
-    const zip = zipSync({
-      'index.html': strToU8(indexHtml(this.design, { version, themeFiles: this.customThemes.map((t) => t.name) })),
-      'layout.css': strToU8(layoutCss(this.design)),
-      ...Object.fromEntries(this.customThemes.map((t) => [`${t.name}.css`, strToU8(classCss(t, version))])),
-    })
-    download(`${fileBaseName(this.design)}.zip`, zip, 'application/zip')
   }
 }
 

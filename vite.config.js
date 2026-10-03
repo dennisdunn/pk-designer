@@ -9,8 +9,8 @@ import { defaultThemeOf, labelFor } from './src/shared/theme/theme.js'
 
 // `virtual:protokuda` exposes facts about the installed protokuda package: its version
 // (for the exports' CDN links), its palette (from dist/protokuda.css), its themes (from
-// dist/themes), which of them is the default (the one protokuda.css's `:root` matches), and the
-// `:root` values themselves (token defaults, for placeholders).
+// dist/themes), which of them is the default (the one protokuda.css's `:root` matches), the
+// `:root` values themselves (token defaults, for placeholders), and every token name it uses.
 // Nothing here is hard-coded, so a package update flows through on the next build.
 function protokudaInfo() {
   const id = 'virtual:protokuda'
@@ -33,10 +33,13 @@ function protokudaInfo() {
           .map((f) => {
             const name = f.slice(0, -'.css'.length)
             const { tokens } = parseTheme(readFileSync(join(dist, 'themes', f), 'utf8'), name)
-            return [name, { name, label: labelFor(name, palette), version: 1, tokens }]
+            return [name, { name, label: labelFor(name, palette), tokens }]
           }),
       )
       const rootTokens = rootDeclarations(css)
+      // Every --pk-* name the library declares or reads, so tokens newer than the installed
+      // package (e.g. --pk-end-radius) can be hidden until it has them.
+      const knownTokens = [...new Set([...css.matchAll(/--pk-[a-z0-9-]+/g)].map((m) => m[0]))].sort()
       const defaultTheme = defaultThemeOf(rootTokens, themes)
       if (!defaultTheme) throw new Error("protokuda.css's :root defaults match none of its themes")
       return [
@@ -46,6 +49,7 @@ function protokudaInfo() {
         `export const themeNames = ${JSON.stringify(Object.keys(themes))};`,
         `export const defaultTheme = ${JSON.stringify(defaultTheme)};`,
         `export const rootTokens = ${JSON.stringify(rootTokens)};`,
+        `export const knownTokens = ${JSON.stringify(knownTokens)};`,
         '',
       ].join('\n')
     },
@@ -76,8 +80,8 @@ const pwa = VitePWA({
       { name: 'Designer', short_name: 'Designer', url: './#/designer' },
       { name: 'Themer', short_name: 'Themer', url: './#/themer' },
     ],
-    // "Open with" for designs and theme files (Chromium on desktop); src/shared/launch.svelte.js
-    // routes them. One window: a file opens in the running app.
+    // "Open with" for projects and theme files (Chromium on desktop); src/shared/launch.svelte.js
+    // queues them for the shell, which opens them like Open. One window: a file opens in the running app.
     file_handlers: [{ action: './', accept: { 'application/json': ['.json'], 'text/css': ['.css'] } }],
     launch_handler: { client_mode: 'focus-existing' },
   },

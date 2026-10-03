@@ -1,4 +1,5 @@
-// The tokens a Protokuda theme sets, and the kinds of value a token can hold.
+// The tokens a Protokuda theme sets, and the kinds of value a token can hold. A theme is what
+// frames look like: their colors, and optionally their geometry (edge widths and corners).
 
 /**
  * @typedef {object} TokenDef
@@ -6,6 +7,7 @@
  * @property {string} label
  * @property {boolean} [optional]  may be left unset
  * @property {string} [unset]   what an unset optional token falls back to (a token name)
+ * @property {'length'} [kind]  a length (geometry); colors otherwise
  */
 
 /** The tokens a theme sets, grouped for the inspector, in the order a theme file lists them. */
@@ -63,9 +65,26 @@ export const GROUPS = /** @type {{ name: string, tokens: TokenDef[] }[]} */ ([
       { name: '--pk-button-hover-fg', label: 'Button hover text' },
     ],
   },
+  {
+    // All optional: a theme that leaves them unset gets Protokuda's defaults (or the page theme's).
+    name: 'Geometry',
+    tokens: [
+      { name: '--pk-frame-line', label: 'Box frame line' },
+      { name: '--pk-frame-bar', label: 'Top and bottom bars' },
+      { name: '--pk-frame-side', label: 'Side bars' },
+      { name: '--pk-sidebar-width', label: 'Sidebar width' },
+      { name: '--pk-statusline-height', label: 'Statusline height' },
+      { name: '--pk-frame-radius', label: 'Outer corners' },
+      { name: '--pk-elbow-radius', label: 'Outer elbow corners', unset: '--pk-frame-radius' },
+      { name: '--pk-end-radius', label: 'Outer far corners', unset: '--pk-frame-radius' },
+      { name: '--pk-inner-radius', label: 'Inner elbow curve' },
+    ].map((t) => ({ ...t, optional: true, kind: /** @type {const} */ ('length') })),
+  },
 ])
 
 export const TOKENS = GROUPS.flatMap((g) => g.tokens)
+/** The color tokens: the ones a color can refer to, and contrast checks look at. */
+export const COLOR_TOKENS = TOKENS.filter((t) => t.kind !== 'length')
 const TOKEN_NAMES = new Set(TOKENS.map((t) => t.name))
 
 /** Is this custom property one of the theme's tokens? */
@@ -80,6 +99,18 @@ const PREFIX = '--pk-'
 export const bare = (/** @type {string} */ name) => (name.startsWith(PREFIX) ? name.slice(PREFIX.length) : name)
 
 export const isHex = (/** @type {string} */ v) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)
+
+/**
+ * A plain length a theme file may hold for a geometry token: `3px`, `1.5rem`, `0.5em`, `0`.
+ * Deliberately narrow, so a library theme stays safe to put in a `<style>`.
+ */
+export const isLength = (/** @type {string} */ v) => /^(\d*\.?\d+(px|rem|em)|0)$/.test(v)
+
+/** Whether two lengths are the same however they're written: `.5rem` and `0.5rem`. */
+export function sameLength(/** @type {string} */ a, /** @type {string} */ b) {
+  const unit = (/** @type {string} */ v) => v.trim().replace(/^[\d.]+/, '')
+  return parseFloat(a) === parseFloat(b) && (parseFloat(a) === 0 || unit(a) === unit(b))
+}
 
 /** `var(--pk-foo)` → `--pk-foo`, anything else → null. */
 export function varName(/** @type {string} */ value) {
@@ -101,7 +132,7 @@ export function valueKind(value, palette) {
   if (!value) return 'unset'
   if (isHex(value)) return 'custom'
   const ref = varName(value)
-  if (ref && isToken(ref)) return 'token'
+  if (ref && isToken(ref)) return tokenDef(ref)?.kind === 'length' ? 'other' : 'token'
   if (ref && bare(ref) in palette) return 'palette'
   return 'other'
 }

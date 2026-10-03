@@ -1,20 +1,21 @@
 <script>
-  // The theme library: save the open theme for the designer to use, or edit or delete a saved one.
+  // The theme library: themes kept in this browser for any project. Save the open theme into it,
+  // add a saved one to this project, or delete one.
   import { library } from '../../shared/library.svelte.js'
+  import { projectThemes } from '../../shared/themes.svelte.js'
   import { sameTheme } from '../../shared/theme/library.js'
   import { store } from '../lib/store.svelte.js'
 
   const theme = $derived(store.theme)
-  const saved = $derived(library.themes[theme.name])
-  const builtIn = $derived(library.isBuiltIn(theme.name))
+  const saved = $derived(theme && library.themes[theme.name])
   const status = $derived(
-    builtIn
-      ? `${theme.name} is a built-in theme's name. Rename yours to save it.`
+    !theme
+      ? ''
       : !saved
-        ? 'Not in your library yet.'
+        ? `${theme.name} isn't in your library yet.`
         : sameTheme(saved, theme)
-          ? 'Saved. The designer has this version.'
-          : 'Changed since you saved it.',
+          ? `${theme.name} is saved in your library.`
+          : `${theme.name} has changed since you saved it.`,
   )
 
   /** Announcements for the buttons below. */
@@ -23,14 +24,16 @@
   let confirming = $state(/** @type {string | null} */ (null))
 
   function save() {
+    if (!theme) return
     library.save(theme)
-    note = `Saved ${theme.name}. The designer can use it now.`
+    note = `Saved ${theme.name} to your library, for any project.`
   }
 
   /** @param {string} name */
-  function edit(name) {
-    store.replace($state.snapshot(library.themes[name]))
-    note = `Editing ${name}. Undo brings the previous theme back.`
+  function add(name) {
+    const replaced = projectThemes.has(name)
+    projectThemes.editing = projectThemes.add(library.themes[name])
+    note = `${replaced ? 'Replaced the project’s' : 'Added'} ${name}${replaced ? ' with your library’s' : ' to the project'}. Undo brings the previous themes back.`
   }
 
   // No confirm(): some browsers block dialogs. The button asks again instead.
@@ -43,26 +46,29 @@
     }
     library.remove(name)
     confirming = null
-    note = `Deleted ${name}. Designs that use it show it as not in your library.`
+    note = `Deleted ${name} from your library. Projects that have it keep their copy.`
   }
 </script>
 
 <section class="panel" aria-labelledby="ins-library-heading">
   <h2 id="ins-library-heading">Library</h2>
 
-  <p class="help summary">{status}</p>
-  <div class="field">
-    <button type="button" disabled={builtIn || (saved && sameTheme(saved, theme))} onclick={save}>
-      Save to library
-    </button>
-  </div>
+  {#if theme}
+    <p class="help summary">{status}</p>
+    <div class="field">
+      <button type="button" disabled={saved && sameTheme(saved, theme)} onclick={save}>Save to library</button>
+    </div>
+  {/if}
 
   {#if library.list.length}
-    <ul class="library" aria-label="Your themes">
+    <ul class="library" aria-label="Your library">
       {#each library.list as t (t.name)}
-        <li class:open={t.name === theme.name}>
-          <span class="name">{t.label} <code>{t.name}</code> v{t.version}</span>
-          <button type="button" class="small" aria-label="Edit {t.name}" onclick={() => edit(t.name)}>Edit</button>
+        {@const inProject = projectThemes.get(t.name)}
+        <li class:open={t.name === theme?.name}>
+          <span class="name">{t.label} <code>{t.name}</code></span>
+          <button type="button" class="small" disabled={inProject && sameTheme(inProject, t)}
+            aria-label="{inProject ? 'Replace the project’s' : 'Add'} {t.name}{inProject ? '' : ' to the project'}"
+            onclick={() => add(t.name)}>{inProject ? 'Replace' : 'Add'}</button>
           <button
             type="button"
             class="small danger"
@@ -78,7 +84,7 @@
       {/each}
     </ul>
   {:else}
-    <p class="help">Saved themes appear here and in the designer's theme pickers.</p>
+    <p class="help">Themes you save appear here, ready to add to any project.</p>
   {/if}
   <p class="help" role="status">{note}</p>
 </section>

@@ -1,9 +1,9 @@
-// The theme library, shared by both tools: the themer saves themes into it, the designer
-// offers them beside the built-in ones. Kept in localStorage under its own key, and
-// re-read when another window changes it.
+// The theme library: themes kept in this browser for any project. The themer saves project themes
+// into it and copies them back; the designer's pickers offer them, copying one into the project
+// when it's chosen. Kept in localStorage under its own key, re-read when another window changes it.
 
 import { defaultTheme, palette, themeNames, themes as builtIns } from 'virtual:protokuda'
-import { cleanTheme, mergeThemes, readThemes } from './theme/library.js'
+import { cleanTheme, readThemes } from './theme/library.js'
 
 /** @typedef {import('./theme/theme.js').Theme} Theme */
 
@@ -50,18 +50,6 @@ class Library {
   remove(name) {
     delete this.themes[name]
     this.#persist()
-  }
-
-  /**
-   * Add themes carried in a design file that the library doesn't have yet. Where the library
-   * already has a theme by that name, it wins. Returns the names added and the names that differed.
-   * @param {any} raw  a design file's `themes`
-   */
-  merge(raw) {
-    const { add, differed } = mergeThemes(this.themes, readThemes(raw, PKG))
-    for (const theme of add) this.themes[theme.name] = theme
-    if (add.length) this.#persist()
-    return { added: add.map((t) => t.name), differed }
   }
 
   #persist() {
