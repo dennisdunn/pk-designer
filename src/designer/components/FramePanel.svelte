@@ -5,7 +5,7 @@
   import { FRAME_TYPES, MODIFIERS, areaNameError, deleteFrame, placeFrame } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
   import { projectThemes } from '../../shared/themes.svelte.js'
-  import ThemeOptions from './ThemeOptions.svelte'
+  import ThemeOptions from '../../shared/ThemeOptions.svelte'
 
   // Only mounted while a frame is selected.
   const frame = $derived(/** @type {import('../lib/model.js').Frame} */ (store.selected))

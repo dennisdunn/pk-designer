@@ -26,7 +26,7 @@
     <Preview />
   {:else}
     <div class="stage empty">
-      <p>This project has no themes of its own yet. Start one from a built-in theme in <a href="#ins-themes-heading">Themes</a>.</p>
+      <p>This project has no themes of its own yet. Pick a built-in in <a href="#ins-editing">Themes</a> to make a copy to edit.</p>
     </div>
   {/if}
   <aside class="inspector" aria-label="Inspector">

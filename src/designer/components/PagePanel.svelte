@@ -4,7 +4,7 @@
   import { projectThemes } from '../../shared/themes.svelte.js'
   import { isValidTrack, setTracks, splitTracks } from '../lib/model.js'
   import { store } from '../lib/store.svelte.js'
-  import ThemeOptions from './ThemeOptions.svelte'
+  import ThemeOptions from '../../shared/ThemeOptions.svelte'
 
   const page = $derived(store.design.page)
   const grid = $derived(store.design.grid)

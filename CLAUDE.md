@@ -106,8 +106,8 @@ are redirect pages in the dennisdunn.github.io repo; they share the origin, so a
   sidebar and statusline sizes, outer corners, the inner elbow curve). Unset geometry follows
   Protokuda's defaults, or the page theme's when the theme is on one frame (custom properties inherit).
   Geometry tokens the installed protokuda.css doesn't know yet (`knownTokens`) are hidden.
-- **The themer edits one of the project's themes** (pick, create from a built-in, remove); with none, it
-  shows an empty state. Theme CSS is still what Open reads (built `:root`, source `.pk-theme-x`, or our
+- **The themer edits one of the project's themes**, picked with the designer's theme options: a project
+  theme opens, a built-in makes a copy, a library theme is added; with none, it shows an empty state. Theme CSS is still what Open reads (built `:root`, source `.pk-theme-x`, or our
   export) and what Export writes, in `@layer protokuda.theme`.
 - **Metadata lives in the header comment** (label, the project's `Version N`, the Protokuda version), since
   CSS has nowhere else for it; a custom property would leak into the cascade. `parseTheme` reads the label.
@@ -154,6 +154,8 @@ exact version for now); whether to inline the CSS as an export option.
   - `themes.svelte.js`: the project's themes (`projectThemes`: add, remove, rename, adopt from the library);
   - `saved.js`: the project autosave read at startup, or the pre-project autosaves to migrate;
   - `status.svelte.js`: the toolbar's status message;
+  - `ThemeOptions.svelte`: a theme picker's options, the same in both tools: built-in, the project's,
+    then the library's (choosing one adopts it into the project);
   - `readme.js` + `readme.md`: the export README; edit the Markdown, `{{key}}` placeholders are filled
     in by `readme()`, which throws on a placeholder it has no value for;
   - `history.svelte.js`: undo/redo over JSON snapshots; nearby changes and drags group into one step;
@@ -194,15 +196,13 @@ exact version for now); whether to inline the CSS as an export option.
   editor state (selection, history, files). A selected id may outlive its frame; `store.selected` is null then.
 - `components/Canvas.svelte`: preview plus the guides layer (cells, hit boxes, handles, separators),
   positioned by `measureGrid`.
-- `components/ThemeOptions.svelte`: a theme picker's options: built-in, the project's, then the library's
-  (choosing one adopts it into the project).
 
 **Themer** (`src/themer/`):
 - `Themer.svelte`: the tool's shortcuts and layout (Geometry first among the token groups).
 - `lib/color.js`: resolving values to colors, cycle detection, contrast and `contrastChecks`.
 - `lib/store.svelte.js`: the open theme (derived from `projectThemes`), contrast `checks`, preview
   options, history over the project's themes, create and reset.
-- `components/`: `Preview`, `ThemesPanel` (the project's themes: pick, create, remove), `ThemePanel`
+- `components/`: `Preview`, `ThemesPanel` (which theme to edit, and remove it), `ThemePanel`
   (label, name, reset colors), `LibraryPanel` (save, add to project, delete), `PreviewPanel`
   (preview-only options), `TokenRow` (a color), `GeometryRow` (a length), `ContrastPanel`.
 
