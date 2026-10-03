@@ -72,17 +72,51 @@ body {
 /* ---------- toolbar ---------- */
 
 .toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0.5rem 1.25rem;
+  /* The brand spans both rows; the buttons fill the first, the messages the strip under them. The
+     strip keeps its height while empty, so a message never moves the workspace. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(1.2rem, auto);
+  grid-template-areas:
+    'brand actions actions'
+    'brand message update';
+  gap: 0 1.25rem;
   padding: 0.5rem 1rem;
   border-bottom: 0.5rem solid var(--ui-primary);
 }
+.toolbar .brand {
+  grid-area: brand;
+}
+.toolbar .actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+.toolbar .message {
+  grid-area: message;
+}
+.toolbar .update {
+  grid-area: update;
+}
+@media (max-width: 52rem) {
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(1.2rem, auto) auto;
+    grid-template-areas: 'brand' 'actions' 'message' 'update';
+    row-gap: 0.4rem;
+  }
+}
 
+/* The textmark, with the project's title and version under it. */
+.toolbar .brand {
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+}
 .toolbar h1 {
-  margin: 0 1rem 0 0;
-  align-self: center;
+  margin: 0;
+  line-height: 1;
   font-size: 1.6rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -99,28 +133,29 @@ body {
 
 .toolbar nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
 }
 
-/* Global: the project's title and version, then its file actions. */
+/* The file actions (global), then the open tool's group. */
 .toolbar .global,
 .toolbar .tool {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
   gap: 0.5rem;
-}
-.toolbar .project {
-  display: grid;
-  grid-template-columns: 11rem auto;
-  align-items: center;
-  gap: 0.25rem;
   padding-left: 0.75rem;
   border-left: 3px solid var(--ui-muted);
 }
+.toolbar .project {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.25rem;
+}
 .toolbar .project input {
   min-width: 0;
-  padding: 0.3rem 0.4rem;
+  padding: 0.15rem 0.4rem;
   font: inherit;
   color: var(--ui-text);
   background: var(--ui-bg);
@@ -140,8 +175,6 @@ body {
 /* The open tool: its tab, joined by a bar to its own buttons (Undo and Redo always first). */
 .toolbar .tool {
   gap: 0;
-  padding-left: 0.75rem;
-  border-left: 3px solid var(--ui-muted);
 }
 .toolbar .tool .tabs {
   margin-right: 0.5rem;
@@ -153,18 +186,32 @@ body {
 
 .toolbar .message {
   margin: 0;
-  align-self: center;
+  align-self: end;
+  font-size: 0.9rem;
+  line-height: 1.2;
   color: var(--ui-primary);
 }
 .toolbar .update {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin: 0 0 0 auto;
+  margin: 0;
+  align-self: end;
+  font-size: 0.9rem;
   color: var(--ui-accent);
 }
 .toolbar .update:empty {
   display: none;
+}
+/* Compact, so the notice fits the strip under the buttons; the code number goes inline. */
+.toolbar .update button {
+  min-width: 0;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.85rem;
+}
+.toolbar .update button[data-code]::after {
+  display: inline;
+  margin: 0 0 0 0.5rem;
 }
 
 /* Okuda-style square buttons with a code number in the corner. */
