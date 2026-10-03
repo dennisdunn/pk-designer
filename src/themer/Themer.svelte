@@ -47,15 +47,6 @@
     store.exportZip()
     message = `Exported ${fileBaseName(store.theme)}.zip.`
   }
-
-  async function copySource() {
-    try {
-      await store.copySource()
-      message = `Copied the src/themes/${store.theme.name}.css source to the clipboard.`
-    } catch {
-      message = "Couldn't copy to the clipboard."
-    }
-  }
 </script>
 
 <svelte:window onkeydown={undoShortcuts(store)} />
@@ -75,8 +66,6 @@
   <nav aria-label="Export">
     <button type="button" class="alt" data-code="03-0001" title="Download the theme .css and a README as a zip"
       onclick={exportZip}>Export</button>
-    <button type="button" class="alt" data-code="03-0002"
-      title="Copy the theme in protokuda's src/themes form" onclick={copySource}>Copy source</button>
   </nav>
 </Toolbar>
 

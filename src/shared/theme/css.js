@@ -113,14 +113,6 @@ function layered(theme, pkVersion, selector) {
 /** Text that can't end the comment it sits in. @param {string} text */
 const comment = (text) => text.replace(/\*\//g, '* /')
 
-/**
- * The same theme in the protokuda repo's `src/themes/<name>.css` form, ready to add to the library.
- * @param {Theme} theme
- */
-export function sourceCss(theme) {
-  return [`/**\n${comment(theme.label)}\n*/`, `.pk-theme-${theme.name} {`, ...body(theme, '  '), '}', ''].join('\n')
-}
-
 /** Declarations in schema order, with a blank line before the buttons, like the library's themes. */
 function body(/** @type {Theme} */ theme, /** @type {string} */ indent) {
   const lines = []

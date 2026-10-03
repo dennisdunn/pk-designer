@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classCss, classRule, parseTheme, rootDeclarations, sourceCss, themeCss } from './css.js'
+import { classCss, classRule, parseTheme, rootDeclarations, themeCss } from './css.js'
 import { pkg, palette } from './fixtures.js'
 import { TOKENS } from './tokens.js'
 
@@ -55,12 +55,11 @@ describe('parse and write', () => {
   it("keeps a label from ending the header comment", () => {
     const t = { ...parseTheme(pkg('themes/atomic.css'), 'atomic'), label: 'A */ B' }
     expect(themeCss(t, '3.0.1')).toMatch(/^\/\*\*\nA \* \/ B\n/)
-    expect(sourceCss(t)).toMatch(/^\/\*\*\nA \* \/ B\n/)
   })
 
-  it('round-trips through the source form, which has no version', () => {
-    const t = { ...parseTheme(pkg('themes/atomic.css'), 'atomic'), label: 'Atomic' }
-    expect(parseTheme(sourceCss(t), 'x')).toEqual({ ...t, version: 1 })
+  it('reads a theme in the library source form, which has no version', () => {
+    const t = parseTheme('/**\nEmber\n*/\n.pk-theme-ember {\n  --pk-primary: #f60;\n}\n', 'x')
+    expect(t).toEqual({ name: 'ember', label: 'Ember', version: 1, tokens: { '--pk-primary': '#f60' } })
   })
 
   it('reads a one-line header comment', () => {

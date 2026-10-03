@@ -143,7 +143,7 @@ exact version for now); whether to inline the CSS as an export option.
     - `theme.js`: the `Theme` type and model operations: naming, `startFrom`, `completeTheme`,
       `defaultThemeOf`;
     - `css.js`: reading theme CSS (`parseTheme`, `paletteFrom`, `rootDeclarations`) and writing it
-      (`themeCss`, `sourceCss`, and for the designer `classCss` and `classRule`);
+      (`themeCss`, and for the designer `classCss` and `classRule`);
     - `library.js`: the library's pure helpers: `cleanTheme`, `readThemes`, `sameTheme`, and `mergeThemes`
       (what opening a design file adds to the library);
     - `fixtures.js`: tests only; reads the installed package's built files.

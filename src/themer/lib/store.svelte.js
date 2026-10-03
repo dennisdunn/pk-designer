@@ -7,7 +7,7 @@ import { defaultTheme, palette, themes, version as pkVersion } from 'virtual:pro
 import { autosave, loadAutosave } from '../../shared/autosave.js'
 import { download } from '../../shared/files.js'
 import { History } from '../../shared/history.svelte.js'
-import { parseTheme, sourceCss, themeCss } from '../../shared/theme/css.js'
+import { parseTheme, themeCss } from '../../shared/theme/css.js'
 import { completeTheme, fileBaseName, isValidName, startFrom } from '../../shared/theme/theme.js'
 import { contrastChecks } from './color.js'
 import { readme } from './readme.js'
@@ -81,11 +81,6 @@ class Store {
       'README.md': strToU8(readme(this.theme, pkVersion)),
     })
     download(`${fileBaseName(this.theme)}.zip`, zip, 'application/zip')
-  }
-
-  /** The protokuda `src/themes/` form, for adding the theme to the library. */
-  async copySource() {
-    await navigator.clipboard.writeText(sourceCss(this.theme))
   }
 }
 
