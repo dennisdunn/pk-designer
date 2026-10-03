@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "check": "svelte-check --fail-on-warnings",
-    "icons": "sh icons/render.sh"
+    "icons": "sh icons/render.sh",
+    "postversion": "git push --follow-tags"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
