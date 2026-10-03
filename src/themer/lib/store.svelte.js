@@ -49,7 +49,10 @@ class Store {
   /** A new project theme, copied from a built-in one, and open it. @param {string} name */
   create(name) {
     const theme = startFrom(themes[name])
-    theme.name = freeName(theme.name, (n) => !projectThemes.canUse(n))
+    const base = theme.name
+    theme.name = freeName(base, (n) => !projectThemes.canUse(n))
+    // A numbered copy gets the same number in its label: mynavy2 is My Navy 2.
+    if (theme.name !== base) theme.label += ` ${theme.name.slice(base.length)}`
     projectThemes.editing = projectThemes.add(theme)
     return theme.name
   }
