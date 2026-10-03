@@ -128,7 +128,7 @@ exact version for now); whether to inline the CSS as an export option.
 - `npm run dev` / `npm test` / `npm run check` (svelte-check) / `npm run build`. The service worker only
   runs in a build: `npm run build`, then the `preview` launch config (`vite preview` on port 4173); unregister
   it afterwards, or it keeps serving this app on that port. CI (`ci.yml`) runs check, test and build on every push. Deployed to GitHub Pages by `.github/workflows/deploy.yml`
-  on `v*` tags or a manual run; `npm version ...` makes the tag and pushes it (`postversion`).
+  on `v*` tags or a manual run; `npm version ...` fetches tags first (`preversion`), then makes the tag and pushes it (`postversion`).
 - `.github/dependabot.yml`: weekly update pull requests. Each runtime dependency (Protokuda above all) gets
   its own; dev tooling and GitHub Actions are grouped. TypeScript majors are held back until svelte-check
   supports them (its peer dependency is `^5 || ^6`).
